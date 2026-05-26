@@ -6,11 +6,11 @@ A five-step intake pipeline for commercial-photography catalogs, expressed as fi
 
 | # | Skill | Question it answers | Output |
 |---|-------|---------------------|--------|
-| 1 | [`photo-metadata-helper`](photo-metadata-helper/SKILL.md) | What is this photo of, where, and who? | IPTC title / description / keywords / `PersonInImage` embedded; file renamed from a hyphenated title |
-| 2 | [`quality-review`](quality-review/SKILL.md) | Is it good enough — technically, editorially, and at print scale? | PASS / CONDITIONAL PASS / FAIL with one-line reasons; size restrictions if any |
-| 3 | [`property-release-review`](property-release-review/SKILL.md) | Is anything in the scene a rights concern (building, sculpture, mural, branded venue, trademark)? | Bucket 1 / Bucket 2 / SOFT-FLAG / OK / EXEMPT per image, with FOP analysis where relevant |
-| 4 | [`model-release-review`](model-release-review/SKILL.md) | Does anyone in the frame need a signed model release? | HARD-FLAG / SOFT-FLAG / OK / EXEMPT keyed to identifiability-to-the-public, with stricter bars for children and workers-at-workplace |
-| 5 | [`reviewed-photo-publish`](reviewed-photo-publish/SKILL.md) | Catalog entry, sales-platform listing, intake-queue cleanup — only acts on photos that cleared every upstream step | Stripe product + child prices per supported size; file moved to published location; original archived; intake queue cleaned |
+| 1 | [`photo-metadata-helper`](skills/photo-metadata-helper/SKILL.md) | What is this photo of, where, and who? | IPTC title / description / keywords / `PersonInImage` embedded; file renamed from a hyphenated title |
+| 2 | [`quality-review`](skills/quality-review/SKILL.md) | Is it good enough — technically, editorially, and at print scale? | PASS / CONDITIONAL PASS / FAIL with one-line reasons; size restrictions if any |
+| 3 | [`property-release-review`](skills/property-release-review/SKILL.md) | Is anything in the scene a rights concern (building, sculpture, mural, branded venue, trademark)? | Bucket 1 / Bucket 2 / SOFT-FLAG / OK / EXEMPT per image, with FOP analysis where relevant |
+| 4 | [`model-release-review`](skills/model-release-review/SKILL.md) | Does anyone in the frame need a signed model release? | HARD-FLAG / SOFT-FLAG / OK / EXEMPT keyed to identifiability-to-the-public, with stricter bars for children and workers-at-workplace |
+| 5 | [`reviewed-photo-publish`](skills/reviewed-photo-publish/SKILL.md) | Catalog entry, sales-platform listing, intake-queue cleanup — only acts on photos that cleared every upstream step | Stripe product + child prices per supported size; file moved to published location; original archived; intake queue cleaned |
 
 Each skill's `SKILL.md` declares its position in the pipeline. Order matters: quality runs before legal so rights-clearance effort isn't spent on photos that won't make it; property runs before model because property/trademark concerns are usually dispositive regardless of model status. A FAIL or Bucket-1 at any upstream step short-circuits the rest of the pipeline for that photo.
 
@@ -24,18 +24,21 @@ For audit-only sweeps of an already-published catalog, any single skill can be i
 
 ## Installation
 
-These are PAI-style skills — drop the five directories under your skill loader and they'll self-activate on the trigger phrases in each `SKILL.md` description. For a typical PAI setup:
+This repo is packaged as a [Claude Code plugin](https://code.claude.com/docs/en/plugins.md). One command installs all five skills together:
 
 ```bash
-# from your skills root (e.g. ~/.claude/skills/)
-ln -s ~/GitHub/photography-workflow/photo-metadata-helper .
-ln -s ~/GitHub/photography-workflow/quality-review .
-ln -s ~/GitHub/photography-workflow/property-release-review .
-ln -s ~/GitHub/photography-workflow/model-release-review .
-ln -s ~/GitHub/photography-workflow/reviewed-photo-publish .
+claude plugin install https://github.com/derekslinz/photography-workflow
 ```
 
-Each skill self-describes its `USE WHEN` triggers; no manual loading needed once the symlinks are in place.
+Skills are namespaced under the plugin name and self-activate on the trigger phrases in each `SKILL.md` description:
+
+- `photography-workflow:photo-metadata-helper`
+- `photography-workflow:quality-review`
+- `photography-workflow:property-release-review`
+- `photography-workflow:model-release-review`
+- `photography-workflow:reviewed-photo-publish`
+
+The plugin manifest lives at [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json). To develop locally without going through the install command, symlink the repo's `skills/` entries into your skill loader directly.
 
 ## External dependencies
 
