@@ -37,7 +37,17 @@ Then reload so the skills are picked up in the current session:
 /reload-plugins
 ```
 
-Skills are namespaced under the plugin name and self-activate on the trigger phrases in each `SKILL.md` description:
+## Entry point
+
+After install, the canonical way to run the full pipeline on a batch of new photos is:
+
+```text
+/photo-intake <path-to-input-directory>
+```
+
+This slash command drives all five steps in order — metadata → quality → property → model → publish — with the short-circuit and sign-off rules enforced. The command source is at [`commands/photo-intake.md`](commands/photo-intake.md).
+
+Skills are also namespaced under the plugin name and self-activate on the trigger phrases in each `SKILL.md` description, so they can be invoked individually for audit-only sweeps or single-step work:
 
 - `photography-workflow:photo-metadata-helper`
 - `photography-workflow:quality-review`
