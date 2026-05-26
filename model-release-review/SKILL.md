@@ -22,15 +22,17 @@ Output location: a scratch dir scoped to the active audit (e.g. `<workdir>/downs
 
 This rule exists because description-only judgments (carry-over notes from prior sessions, captions, IPTC metadata) lie. Pixels don't. The gate has demonstrably caught description-only HARD-FLAGs that the actual frame falsified — back-turned subjects mislabeled as frontal, glass-distorted faces mislabeled as identifiable.
 
-## Intake Sequence (Step 3 of 3)
+## Intake Sequence (Step 4 of 5)
 
-For new-photo intake, this skill is **step 3 of 3** in the pipeline:
+For new-photo intake, this skill is **step 4 of 5** in the pipeline:
 
-1. **Photo-Metadata-Helper** — metadata, naming, subject-name embed
-2. **property-release-review** — depicted-object audit
-3. **model-release-review** (this skill) — depicted-person audit
+1. **photo-metadata-helper** — metadata, naming, subject-name embed
+2. **quality-review** — technical, editorial, and print-readiness gate
+3. **property-release-review** — depicted-object audit
+4. **model-release-review** (this skill) — depicted-person audit
+5. **publish** — catalog entry, sales-platform listing, remove from intake queue
 
-If property review flagged a photo as Bucket 1 (remove entirely), skip model review for that photo — the property concern is already dispositive.
+If quality-review failed a photo or property-release-review flagged it as Bucket 1 (remove entirely), skip model review for that photo — the upstream concern is already dispositive. Publish is a distinct downstream step, never collapsed into this skill.
 
 For audit-only passes on an already-published catalog, this skill can be invoked standalone.
 

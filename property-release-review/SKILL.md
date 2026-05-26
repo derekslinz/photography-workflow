@@ -22,15 +22,17 @@ Output location: a scratch dir scoped to the active audit (e.g. `<workdir>/downs
 
 The gate exists because description-only judgments (carry-over notes, captions, IPTC metadata, prior-session classifications) lie. Pixels don't.
 
-## Intake Sequence (Step 2 of 3)
+## Intake Sequence (Step 3 of 5)
 
-For new-photo intake, this skill is **step 2 of 3** in the pipeline:
+For new-photo intake, this skill is **step 3 of 5** in the pipeline:
 
-1. **Photo-Metadata-Helper** — metadata, naming, subject-name embed
-2. **property-release-review** (this skill) — depicted-object audit
-3. **model-release-review** — depicted-person audit
+1. **photo-metadata-helper** — metadata, naming, subject-name embed
+2. **quality-review** — technical, editorial, and print-readiness gate
+3. **property-release-review** (this skill) — depicted-object audit
+4. **model-release-review** — depicted-person audit
+5. **publish** — catalog entry, sales-platform listing, remove from intake queue
 
-This skill runs before model-release-review because property/trademark concerns are usually dispositive of the sale decision regardless of model release status.
+This skill runs before model-release-review because property/trademark concerns are usually dispositive of the sale decision regardless of model release status. It runs after quality-review so rights-clearance effort is not spent on photos that won't pass the editorial gate.
 
 For audit-only passes on an already-published catalog, this skill can be invoked standalone.
 

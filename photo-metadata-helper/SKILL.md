@@ -18,13 +18,15 @@ End-to-end workflow for generating rich IPTC metadata for a folder of JPEGs and 
 
 ## Intake Sequence (FIRST step of the pipeline)
 
-For any new photos being considered for addition to a commercial-photography site, this skill is **step 1 of 3**:
+For any new photos being considered for addition to a commercial-photography site, this skill is **step 1 of 5**:
 
-1. **Photo-Metadata-Helper** (this skill) — generate titles, descriptions, keywords, geo, and embed subject names
-2. **property-release-review** — audit depicted objects (buildings, artwork, branded venues, trademarks)
-3. **model-release-review** — audit depicted persons (identifiability, children, workers at workplace)
+1. **photo-metadata-helper** (this skill) — generate titles, descriptions, keywords, geo, and embed subject names
+2. **quality-review** — technical, editorial, and print-readiness gate
+3. **property-release-review** — audit depicted objects (buildings, artwork, branded venues, trademarks)
+4. **model-release-review** — audit depicted persons (identifiability, children, workers at workplace)
+5. **publish** — catalog entry, sales-platform listing, remove from intake queue
 
-Do not skip steps or change the order. Property review goes before model review because property concerns are usually dispositive of the sale decision regardless of model release status.
+Do not skip steps or change the order. Quality review runs before legal review because failing photos shouldn't consume rights-clearance effort. Property review runs before model review because property/trademark concerns are usually dispositive of the sale decision regardless of model release status. Publish is segmented out as its own step so a failed publish never silently blocks a still-clean rights audit.
 
 ## Prerequisites
 
