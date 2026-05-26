@@ -24,10 +24,17 @@ For audit-only sweeps of an already-published catalog, any single skill can be i
 
 ## Installation
 
-This repo is packaged as a [Claude Code plugin](https://code.claude.com/docs/en/plugins.md). One command installs all five skills together:
+This repo is packaged as a [Claude Code plugin](https://code.claude.com/docs/en/plugins.md) and is also its own [marketplace](https://code.claude.com/docs/en/plugin-marketplaces.md). Two commands inside Claude Code install all five skills together:
 
-```bash
-claude plugin install https://github.com/derekslinz/photography-workflow
+```text
+/plugin marketplace add derekslinz/photography-workflow
+/plugin install photography-workflow@photography-workflow
+```
+
+Then reload so the skills are picked up in the current session:
+
+```text
+/reload-plugins
 ```
 
 Skills are namespaced under the plugin name and self-activate on the trigger phrases in each `SKILL.md` description:
@@ -38,7 +45,14 @@ Skills are namespaced under the plugin name and self-activate on the trigger phr
 - `photography-workflow:model-release-review`
 - `photography-workflow:reviewed-photo-publish`
 
-The plugin manifest lives at [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json). To develop locally without going through the install command, symlink the repo's `skills/` entries into your skill loader directly.
+### Manifests
+
+- [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) — declares this directory as a plugin
+- [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) — declares this repo as a marketplace whose only plugin is itself
+
+### Local development
+
+To work on the skills without going through marketplace install, symlink the entries in `skills/` straight into your skill loader (or point Claude Code at the working tree via its local-plugin support).
 
 ## External dependencies
 

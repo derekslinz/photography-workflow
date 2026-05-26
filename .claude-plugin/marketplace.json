@@ -1,0 +1,17 @@
+{
+  "name": "photography-workflow",
+  "owner": {
+    "name": "Derek Linz"
+  },
+  "plugins": [
+    {
+      "name": "photography-workflow",
+      "description": "Five-step intake pipeline for commercial-photography catalogs: metadata, quality, property/trademark/copyright, model-release, and explicit-sign-off publish. Mandatory 1024px-downscale gate on every image read; mandatory per-photo sign-off before any live mutation.",
+      "version": "1.0.0",
+      "source": {
+        "type": "git",
+        "url": "https://github.com/derekslinz/photography-workflow"
+      }
+    }
+  ]
+}
