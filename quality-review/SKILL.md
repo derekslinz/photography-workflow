@@ -8,7 +8,7 @@ description: >
   viewing any image. USE WHEN: quality check, quality gate, review photos before publishing,
   are these good enough, editorial review, technical review, print-ready check, assess photos.
   NOT FOR: metadata tagging (use /Photo-Metadata-Helper), rights audits (use
-  /property-release-review and /model-release-review), final publishing (use /publish).
+  /property-release-review and /model-release-review), final publishing (use /reviewed-photo-publish).
 effort: medium
 ---
 
@@ -23,7 +23,7 @@ merit, and print-readiness before committing time to legal review and publishing
 2. **quality-review** (this skill) — technical, editorial, print-readiness gate
 3. **property-release-review** — depicted-object audit
 4. **model-release-review** — depicted-person audit
-5. **publish** — catalog entry, Stripe listing, remove from queue
+5. **reviewed-photo-publish** — catalog entry, Stripe listing, remove from queue
 
 **If a photo fails quality review, do not proceed to steps 3–5 for that photo.** Surface
 the failure and wait for user instruction.

@@ -1,6 +1,6 @@
 # photography-workflow
 
-A five-step intake pipeline for commercial-photography catalogs, expressed as four self-activating skills plus a placeholder for publish. Built for a working photographer running a sales platform: every photo that ends up on a "buy this print" page has been through metadata enrichment, a quality gate, a property/trademark/copyright audit, and a model-release audit — in that order, with no step skipped.
+A five-step intake pipeline for commercial-photography catalogs, expressed as five self-activating skills. Built for a working photographer running a sales platform: every photo that ends up on a "buy this print" page has been through metadata enrichment, a quality gate, a property/trademark/copyright audit, a model-release audit, and a publish step — in that order, with no step skipped.
 
 ## The pipeline
 
@@ -10,7 +10,7 @@ A five-step intake pipeline for commercial-photography catalogs, expressed as fo
 | 2 | [`quality-review`](quality-review/SKILL.md) | Is it good enough — technically, editorially, and at print scale? | PASS / CONDITIONAL PASS / FAIL with one-line reasons; size restrictions if any |
 | 3 | [`property-release-review`](property-release-review/SKILL.md) | Is anything in the scene a rights concern (building, sculpture, mural, branded venue, trademark)? | Bucket 1 / Bucket 2 / SOFT-FLAG / OK / EXEMPT per image, with FOP analysis where relevant |
 | 4 | [`model-release-review`](model-release-review/SKILL.md) | Does anyone in the frame need a signed model release? | HARD-FLAG / SOFT-FLAG / OK / EXEMPT keyed to identifiability-to-the-public, with stricter bars for children and workers-at-workplace |
-| 5 | `publish` | Catalog entry, sales-platform listing, intake-queue cleanup | (segmented as its own step — never folded into a sibling) |
+| 5 | [`reviewed-photo-publish`](reviewed-photo-publish/SKILL.md) | Catalog entry, sales-platform listing, intake-queue cleanup — only acts on photos that cleared every upstream step | Stripe product + child prices per supported size; file moved to published location; original archived; intake queue cleaned |
 
 Each skill's `SKILL.md` declares its position in the pipeline. Order matters: quality runs before legal so rights-clearance effort isn't spent on photos that won't make it; property runs before model because property/trademark concerns are usually dispositive regardless of model status. A FAIL or Bucket-1 at any upstream step short-circuits the rest of the pipeline for that photo.
 
@@ -24,7 +24,7 @@ For audit-only sweeps of an already-published catalog, any single skill can be i
 
 ## Installation
 
-These are PAI-style skills — drop the four directories under your skill loader and they'll self-activate on the trigger phrases in each `SKILL.md` description. For a typical PAI setup:
+These are PAI-style skills — drop the five directories under your skill loader and they'll self-activate on the trigger phrases in each `SKILL.md` description. For a typical PAI setup:
 
 ```bash
 # from your skills root (e.g. ~/.claude/skills/)
@@ -32,6 +32,7 @@ ln -s ~/GitHub/photography-workflow/photo-metadata-helper .
 ln -s ~/GitHub/photography-workflow/quality-review .
 ln -s ~/GitHub/photography-workflow/property-release-review .
 ln -s ~/GitHub/photography-workflow/model-release-review .
+ln -s ~/GitHub/photography-workflow/reviewed-photo-publish .
 ```
 
 Each skill self-describes its `USE WHEN` triggers; no manual loading needed once the symlinks are in place.
@@ -46,6 +47,6 @@ The skills assume bash + macOS / Linux. Sales-platform integration (Stripe in th
 
 ## Status
 
-- Four of the five steps are implemented as skills in this repo.
-- The publish step is segmented out (step 5) but does not yet have its own skill — that's the next addition.
-- Pipeline ordering is consistent across all four `SKILL.md` files. If you add a sixth step, every existing skill needs its Intake Sequence updated.
+- All five steps are implemented as skills in this repo.
+- `reviewed-photo-publish` is the only step that mutates external state (Stripe, archive directory, intake queue). It refuses to publish anything not stamped by every upstream step, dry-runs every sales-platform write by default, and requires explicit per-photo sign-off in the current turn before any live mutation — no batch approvals, no session-level yeses.
+- Pipeline ordering is consistent across all five `SKILL.md` files. If you add a sixth step, every existing skill needs its Intake Sequence updated.

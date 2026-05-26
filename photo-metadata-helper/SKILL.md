@@ -24,7 +24,7 @@ For any new photos being considered for addition to a commercial-photography sit
 2. **quality-review** — technical, editorial, and print-readiness gate
 3. **property-release-review** — audit depicted objects (buildings, artwork, branded venues, trademarks)
 4. **model-release-review** — audit depicted persons (identifiability, children, workers at workplace)
-5. **publish** — catalog entry, sales-platform listing, remove from intake queue
+5. **reviewed-photo-publish** — catalog entry, sales-platform listing, remove from intake queue
 
 Do not skip steps or change the order. Quality review runs before legal review because failing photos shouldn't consume rights-clearance effort. Property review runs before model review because property/trademark concerns are usually dispositive of the sale decision regardless of model release status. Publish is segmented out as its own step so a failed publish never silently blocks a still-clean rights audit.
 
