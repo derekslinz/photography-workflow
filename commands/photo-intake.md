@@ -1,13 +1,22 @@
 ---
-description: Run the full five-step photography-workflow intake pipeline on a directory of new photos — metadata, quality, property, model, then explicit-sign-off publish.
-argument-hint: <input-directory>
+description: Run the full five-step photography-workflow intake pipeline — metadata, quality, property, model, then explicit-sign-off publish. Defaults to the admin panel upload queue; accepts an optional directory path for ad-hoc batches.
+argument-hint: [input-directory]
 ---
 
 # /photo-intake
 
-You are running the photography-workflow plugin's full intake pipeline on the directory the user has provided: **$ARGUMENTS**.
+You are running the photography-workflow plugin's full intake pipeline. This command is the single entry point to the five skills in this plugin. Drive every step in order; never skip; never reorder; never collapse step 5 into anything else.
 
-This command is the single entry point to the five skills in this plugin. Drive every step in order; never skip; never reorder; never collapse step 5 into anything else.
+## Source of work
+
+The user's default intake source is the **admin panel upload queue** — that is the canonical, day-to-day flow. A directory path is a generalization for one-off batches that haven't gone through the admin panel.
+
+Argument handling:
+
+- **No argument given** (the common case): pull pending photos from the admin panel upload queue. If you do not yet know how this queue is resolved on this machine (file path, API endpoint, etc.), ask the user once at the start of the run, then proceed.
+- **A path was provided as `$ARGUMENTS`**: treat that directory as the scope and pull photos from there instead of the queue.
+
+Either way, confirm the scope (count + source) with the user before starting step 1.
 
 ## The pipeline
 
@@ -28,10 +37,8 @@ For every photo in the input directory, walk through the five steps below in ord
 
 ## How to begin
 
-1. Confirm the input directory exists and list the photos under review.
-2. Surface the planned scope (file count, exempt category if declared, anything ambiguous).
+1. Resolve the source: admin panel upload queue (default) or the directory path in `$ARGUMENTS` if one was given.
+2. List the photos under review and surface the planned scope (file count, source, exempt category if declared, anything ambiguous).
 3. Ask the user to confirm scope before starting step 1.
 4. Run the pipeline.
 5. Produce a final summary: per-photo verdict at each step, dispositions, and what was published vs held vs dropped.
-
-If the user invoked this command without a directory argument, ask for one before doing anything else.
