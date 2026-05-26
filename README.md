@@ -16,6 +16,46 @@ Each skill's `SKILL.md` declares its position in the pipeline. Order matters: qu
 
 For audit-only sweeps of an already-published catalog, any single skill can be invoked standalone.
 
+## Diagram
+
+```mermaid
+flowchart TD
+    SRC([Admin panel upload queue<br/><i>— or —</i><br/>input directory]):::source
+
+    SRC --> S1[1. photo-metadata-helper<br/><i>IPTC · rename · PersonInImage</i>]:::step
+    S1 --> S2{2. quality-review}
+    S2 -- FAIL --> H1[/Hold for re-edit or drop<br/>user decides/]:::halt
+    S2 -- PASS / CONDITIONAL PASS --> S3{3. property-release-review}
+    S3 -- Bucket 1 --> H2[/Remove + archive<br/>property concern dispositive/]:::halt
+    S3 -- Bucket 2 --> P[Mark portfolio-only<br/><i>no Stripe at step 5</i>]:::mark
+    S3 -- OK / EXEMPT --> S4{4. model-release-review}
+    P --> S4
+    S4 -- HARD-FLAG · no release --> H3[/Hold for release or drop/]:::halt
+    S4 -- OK / EXEMPT / release on file --> S5[5. reviewed-photo-publish<br/><i>dry-run preview</i>]:::step
+    S5 --> SO{Per-photo sign-off<br/>in current turn?}:::gate
+    SO -- No --> H4[/Halt; surface partial state/]:::halt
+    SO -- Yes --> LIVE[Stripe product + sized prices<br/>file moves · archive · queue removal]:::live
+    LIVE --> RPT([Final report:<br/>verdicts · dispositions · what shipped]):::report
+
+    GATE[[1024-gate · every image read<br/>load-bearing safety rule]]:::rule
+    GATE -.-> S1
+    GATE -.-> S2
+    GATE -.-> S3
+    GATE -.-> S4
+    GATE -.-> S5
+
+    classDef source fill:#eef,stroke:#446,stroke-width:1px;
+    classDef step fill:#efe,stroke:#363,stroke-width:1px;
+    classDef gate fill:#fee,stroke:#933,stroke-width:2px;
+    classDef halt fill:#fdd,stroke:#933,stroke-width:1px;
+    classDef mark fill:#ffe,stroke:#663,stroke-width:1px;
+    classDef live fill:#dfd,stroke:#363,stroke-width:2px;
+    classDef report fill:#eef,stroke:#446,stroke-width:1px;
+    classDef rule fill:#fef,stroke:#636,stroke-width:1px,stroke-dasharray: 4 2;
+```
+
+The two red-bordered nodes — the 1024-gate and the per-photo sign-off — are load-bearing safety rules. Everything else can be tuned; those two stay.
+
 ## Two rules that show up in every skill
 
 **1. The 1024-gate.** Before reading or classifying any image, downscale to 1024px on the long edge and view the downscaled copy. If the resize fails, HALT and ask — never fall back to the full-resolution original. This block is duplicated in every skill on purpose: it once prevented a session from burning ~137M tokens reading full-res photos, and inlining it is the only way to be sure it survives partial loads, refactors, and skill-level edits. Treat it as load-bearing safety code, not boilerplate.
