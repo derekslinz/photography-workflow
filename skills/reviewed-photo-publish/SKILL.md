@@ -92,48 +92,82 @@ If any of these is missing or ambiguous, the skill asks before doing anything.
    - Print the derived-list regenerations that will be triggered
    - **STOP and ask the user to confirm THIS specific photo before any live mutation.** See the "Explicit Sign-Off" rule at the top of this skill. A session-level "yes" or batch-level approval is not sufficient — every photo gets its own affirmative in the turn that publishes it.
 
-4. **Write catalog entry**
-   - Add to source-of-truth with all upstream metadata
-   - Include the sizes resolved in step 2
-   - Include the disposition (sale vs portfolio-only)
+4. **Set price tier (before catalog merge)**
 
-5. **Create sales-platform product (skip for portfolio-only)**
-   - One product per photo
-   - One child price per supported size
-   - Store the returned IDs in the catalog entry
-   - Example (Stripe):
-     ```ts
-     const product = await stripe.products.create({ name: title, description, active: true, images: [publishedUrl] });
-     for (const size of sizes) {
-       const price = await stripe.prices.create({ product: product.id, currency: "eur", unit_amount: size.priceCents, nickname: size.label });
-       catalogEntry.priceIds[size.label] = price.id;
-     }
-     catalogEntry.salesPlatformProductId = product.id;
-     ```
+   Every new photo needs a `priceTier` before the ladder script runs. Tiers auto-assign for
+   unpriced entries based on quality signals (printspace-manual → platinum; panoramas/portraits → gold;
+   full D850/Z9 native ≥8000px → gold; everything else → silver). To override, set `priceTier`
+   explicitly in the catalog entry or pass it as metadata before step 5.
 
-6. **Regenerate derived lists**
-   - Re-run the generator(s) that produce for-sale, gallery, sitemap, RSS, etc.
-   - Generator filter pattern (mirrors `property-release-review`):
-     ```ts
-     const forSale = entries.filter(e => e.salesPlatformProductId && e.sizes && e.sizes.length > 0);
-     const gallery = entries; // everything, sold or not
-     ```
+   Tier multipliers over the 4.8× base:
+   | Tier | Multiplier | 20×30 | 40×60 | 60×90 |
+   |---|---|---|---|---|
+   | silver | 1.0× | €135 | €230 | €365 |
+   | gold | 1.25× | €170 | €290 | €455 |
+   | platinum | 1.50× | €205 | €345 | €550 |
 
-7. **Move files**
-   - Intake → published location (web-served path)
-   - Original (full-res, source) → archive directory
-   - Never delete; always move so the operation is reversible
+5. **Write catalog entry + assign size ladder**
+
+   Copy photo to `/root/uploaded/` then run the pipeline scripts in order:
+
+   ```bash
+   # 1. Additive merge — NEVER run 01-extract.ts (destroys Stripe IDs)
+   bun scripts/catalog/01b-merge-new.ts
+
+   # 2. Classify into series (up-close / travel / documentary / portraits / panoramas / boudoir)
+   bun scripts/catalog/02-classify.ts
+
+   # 3. Copy to public/images/<series>/
+   bun scripts/catalog/03-copy-images.ts
+
+   # 4. Assign size ladders + apply price tier multipliers
+   #    Auto-tier fires here for new entries without an explicit priceTier
+   bun scripts/catalog/03b-assign-ladders.ts
+   ```
+
+   For portfolio-only photos: set `sizes: []` in catalog.json before running 03b, or add the
+   entry id to the `PORTFOLIO_ONLY` set in `03b-assign-ladders.ts`.
+
+6. **Create Stripe products and prices (skip for portfolio-only)**
+
+   ```bash
+   # Dry-run first — confirms product/price counts, logs WOULD CREATE lines
+   bun scripts/catalog/04-stripe-sync.ts --dry-run
+
+   # Live run after confirmation
+   bun scripts/catalog/04-stripe-sync.ts --live
+   ```
+
+   The sync is idempotent (lookup_key–based). Prices are immutable in Stripe — repricing an existing
+   entry requires creating a new price (with `transfer_lookup_key`) and archiving the old one; the
+   sync script does not do this automatically.
+
+7. **Derived lists** — no regeneration step needed. `lib/products.ts` and `lib/gallery.ts` read
+   `data/catalog.json` at request time. The new entry is live as soon as catalog.json is saved.
 
 8. **Verify**
-   - Catalog entry readable from source-of-truth
-   - Sales-platform product visible with all child prices (or absent for portfolio-only)
-   - Derived lists contain the new entry in the right buckets
-   - Published file accessible at its new path; original at its archive path
-   - Intake queue no longer references the photo
+   - Catalog entry readable from `data/catalog.json`
+   - Stripe product visible with all child prices (or absent for portfolio-only)
+   - File accessible at `public/images/<series>/<id>.jpg`
+   - Intake queue entry status updated in `data/uploads.json`
 
-9. **Surface result**
-   - One-line summary per photo: id, title, sizes, sales-platform product ID, disposition
-   - Any non-fatal anomalies (e.g. derived list regeneration warning) flagged for follow-up
+9. **Rebuild and push GMC feed**
+
+   After every publish run (regardless of batch size), rebuild the Google Merchant Center feed and push live:
+
+   ```bash
+   # Dry-run first to confirm product count looks right
+   bun scripts/gmc-sync.ts --dry-run
+   # Then push live
+   bun scripts/gmc-sync.ts
+   ```
+
+   The GMC feed is push-only (`gmc-sync.ts` is the sole write path — pull feeds are disabled). A publish run that skips the GMC push leaves the feed stale for up to 24 hours. Push immediately after every batch.
+
+10. **Surface result**
+    - One-line summary per photo: id, title, sizes, sales-platform product ID, disposition
+    - GMC push result: entries inserted/updated, countries synced
+    - Any non-fatal anomalies flagged for follow-up
 
 ## Ordering Rules
 
@@ -143,6 +177,7 @@ Order is not negotiable:
 2. Sales-platform create **before** derived-list regeneration — so the for-sale list picks up the new product on first regeneration
 3. Derived-list regeneration **before** file move — so the live site is not pointing at a path that doesn't exist yet
 4. File move **before** intake-queue removal — so a failed move doesn't lose the photo
+5. GMC push **after** file move — so all published images are accessible at their final URLs before Google indexes them
 
 A failure at any step HALTs the run and surfaces the partial state. The skill never auto-rolls-back — partial publishes are presented to the user with a recovery plan.
 

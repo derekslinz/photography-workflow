@@ -84,7 +84,8 @@ For each photo, produce:
 **Title** (5–9 words)
 - Describes the primary subject and context concisely
 - Include location if it meaningfully identifies the image (e.g., "Zebra Longwing Butterfly Wings Open Hortus Botanicus Amsterdam" not "Zebra Longwing Butterfly on a Leaf")
-- No articles at the start ("A", "The") — start with the subject
+- No articles at the start ("A", "The", "One") — start with the subject
+- **Discard any existing IPTC Title / ObjectName / XMP-dc:Title from Lightroom.** Lightroom routinely populates the title field with a truncated description sentence (e.g., "One of Amsterdam's many drawbridges, the Aluminumbrug, spans…"). Treat these as input to ignore, not input to keep. Generate the title fresh from observing the image — never preserve a Lightroom title verbatim. Sentence-shape (commas, articles, > 12 words) is the giveaway.
 
 **Description** (60–90 words)
 - Open with the most visually distinctive element
@@ -109,11 +110,16 @@ Don't run 21 individual exiftool commands interactively. Write a single bash scr
 
 **Pattern for each photo block:**
 
+Always sync ALL four title fields. `01-extract.ts` / `01b-merge-new.ts` read `Title` (XMP-dc:Title) BEFORE `ObjectName`, so a stale Lightroom title in `Title` will win over the fresh one in `ObjectName` and the catalog gets the truncated description.
+
 ```bash
 T="Your Title Here"
 D="Your 60-90 word description here."
-exiftool -overwrite_original \
+exiftool -overwrite_original -P \
   -IPTC:ObjectName="$T" \
+  -Title="$T" \
+  -XMP-dc:Title="$T" \
+  -IPTC:Headline="$T" \
   -IPTC:Caption-Abstract="$D" \
   -IPTC:Keywords= \
   -IPTC:Keywords="keyword1" \
@@ -133,8 +139,11 @@ tag_and_rename() {
   shift 3
   local KW_ARGS=()
   for kw in "$@"; do KW_ARGS+=(-IPTC:Keywords="$kw"); done
-  exiftool -overwrite_original \
+  exiftool -overwrite_original -P \
     -IPTC:ObjectName="$NEW_TITLE" \
+    -Title="$NEW_TITLE" \
+    -XMP-dc:Title="$NEW_TITLE" \
+    -IPTC:Headline="$NEW_TITLE" \
     -IPTC:Caption-Abstract="$DESC" \
     -IPTC:Keywords= \
     "${KW_ARGS[@]}" \
