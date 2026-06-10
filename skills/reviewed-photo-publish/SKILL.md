@@ -117,13 +117,23 @@ If any of these is missing or ambiguous, the skill asks before doing anything.
    # 2. Classify into series (up-close / travel / documentary / portraits / panoramas / boudoir)
    bun scripts/catalog/02-classify.ts
 
-   # 3. Copy to public/images/<series>/
+   # 3. Copy to public/images/<series>/  (copies the FULL-RES original)
    bun scripts/catalog/03-copy-images.ts
+
+   # 3b. Downscale published files to 2400px + archive originals, THEN
+   #     pre-generate responsive WebP derivatives + manifest for the image loader.
+   #     Required: 03 copies full-res; this is what makes the served files small
+   #     and produces the WebP the site actually serves (lib/imageLoader.ts).
+   bun scripts/catalog/06-optimize-and-archive.ts
 
    # 4. Assign size ladders + apply price tier multipliers
    #    Auto-tier fires here for new entries without an explicit priceTier
    bun scripts/catalog/03b-assign-ladders.ts
    ```
+
+   The manifest (`lib/image-derivatives.json`) is committed; `.webp` files are gitignored
+   (regenerated on the box). New images serve their 2400px jpg until the next `npm run deploy`
+   bundles the updated manifest — see step 9.
 
    For portfolio-only photos: set `sizes: []` in catalog.json before running 03b, or add the
    entry id to the `PORTFOLIO_ONLY` set in `03b-assign-ladders.ts`.
@@ -163,6 +173,8 @@ If any of these is missing or ambiguous, the skill asks before doing anything.
    ```
 
    The GMC feed is push-only (`gmc-sync.ts` is the sole write path — pull feeds are disabled). A publish run that skips the GMC push leaves the feed stale for up to 24 hours. Push immediately after every batch.
+
+   `gmc-sync.ts` self-heals the feed's additional product images before building: it runs `scripts/catalog/generate-gmc-mockups.ts` (idempotent — existing files skip), which renders each new entry's wall mockups (framed/canvas/paper, type-matched) and full-res detail crop into `public/images/gmc-extra/`. These feed `additionalImageLinks` per offer (GMC store-quality "add more images"). No separate step needed; if the run warns that the generator was skipped (repo lock busy, exit 75), re-run `bun scripts/gmc-sync.ts` after the competing image op finishes so new entries get their extra images.
 
 10. **Surface result**
     - One-line summary per photo: id, title, sizes, sales-platform product ID, disposition
