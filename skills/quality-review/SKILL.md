@@ -4,8 +4,10 @@ description: >
   Step 2 of 5 in the photo intake pipeline. Assesses each candidate photo against technical,
   editorial, and print-readiness criteria before the image moves to legal review. Produces a
   PASS / CONDITIONAL PASS / FAIL verdict per image. On FAIL, surfaces specific reasons and
-  waits for user instruction — takes no destructive action. Mandatory 1024px downscale before
-  viewing any image. USE WHEN: quality check, quality gate, review photos before publishing,
+  waits for user instruction — takes no destructive action. Mandatory 2048px downscale before
+  the model views any image, plus a deterministic measurement pass (bundled Pillow/numpy
+  extractor) that grounds the technical and print-readiness verdicts in real metrics.
+  USE WHEN: quality check, quality gate, review photos before publishing,
   are these good enough, editorial review, technical review, print-ready check, assess photos.
   NOT FOR: metadata tagging (use /Photo-Metadata-Helper), rights audits (use
   /property-release-review and /model-release-review), final publishing (use /reviewed-photo-publish).
@@ -28,19 +30,50 @@ merit, and print-readiness before committing time to legal review and publishing
 **If a photo fails quality review, do not proceed to steps 3–5 for that photo.** Surface
 the failure and wait for user instruction.
 
-## 🚨 MANDATORY FIRST ACTION: Downscale Every Image to 1024px Long Edge
+## 🚨 MANDATORY FIRST ACTIONS: the visual gate AND the measurement pass
 
-Before reading or assessing ANY image, downscale to 1024px on the long edge. Process only
-the downscaled copy. If resize fails, HALT and prompt the user.
+Two things happen before any verdict, and they are deliberately different.
+
+### (a) Visual gate — downscale to 2048px for the model's eyes
+
+Before the model *views* any image, downscale to 2048px on the long edge and view only that
+copy. If resize fails, HALT and prompt the user.
 
 ```bash
-magick "$FILE" -resize "1024x1024>" "/tmp/qr_$(basename "$FILE")"
+magick "$FILE" -resize "2048x2048>" "/tmp/qr_$(basename "$FILE")"
 ```
 
 Read the downscaled file from `/tmp/qr_*` using the Read tool — never the full-res original.
 Clean up `/tmp/qr_*` after the review is complete.
 
-See `[[downscale-images-before-processing]]` in project memory for the cross-cutting rule.
+This stage uses 2048px rather than the pipeline's default 1024px on purpose: a print gate has
+to tell "soft" from "tack-sharp," and 1024px is too coarse to judge critical focus or fine
+detail. The visual copy is now for composition, subject, and editorial merit — the hard
+technical numbers come from the measurement pass below. The cross-cutting
+`[[downscale-images-before-processing]]` rule still governs the model's *viewing*; this is a
+deliberate per-stage override, not a relaxation of it.
+
+### (b) Measurement pass — run the extractor on the ORIGINAL file
+
+A *script* reading the file is not the *model* reading the file: it computes numbers and prints
+a few lines, it never pours megapixels into context. This is exactly why `exiftool` and
+`magick` already run on the original here. Run the bundled extractor once per image:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/quality-review/scripts/analyze_image.py" "$FILE" \
+  --json "/tmp/qr_$(basename "$FILE").json"
+```
+
+(If `${CLAUDE_PLUGIN_ROOT}` isn't set, use this skill's own `scripts/analyze_image.py`.) It
+needs only Pillow + numpy. It returns measured **focus** (variance of Laplacian, global +
+per-tile), **exposure** (clip %, dynamic-range span), **noise**, **colour cast** (per-channel
+means + tint), **true pixel dimensions / aspect ratio**, and **scene key** — the evidence that
+grounds the Technical and Print-Readiness verdicts below.
+
+These measurements are deterministic facts, not opinions. Use them as the source of truth for
+the technical criterion; reserve the model's eyes for what only eyes can judge (composition,
+subject, "does this work"). If the script genuinely can't run, say so and fall back to
+visual-only technical judgement, marking those calls *estimated*.
 
 ## The Three Criteria
 
@@ -56,6 +89,26 @@ See `[[downscale-images-before-processing]]` in project memory for the cross-cut
 
 Intentional creative choices (motion blur, grain film simulation, high contrast B&W) are
 not failures — read the image as a whole before flagging.
+
+**Ground each Technical factor in the measurement-pass numbers** (`/tmp/qr_*.json`). The
+metrics map onto the table above as follows — let the measured value drive the verdict, and use
+your eyes only to decide whether a flagged miss is *intentional*:
+
+| Factor | Measured signal | Read it as |
+|--------|-----------------|-----------|
+| **Focus** | `focus_blur.global_sharpness_lapvar` + `tile_sharpness_max` / `share_tiles_above_global_pct` + `dof_topbottom_gradient` | A low global value with a *high* tile max = a sharp subject on soft surroundings (shallow DOF → fine, not a FAIL). A low global value with a *low* tile max = nothing is sharp → soft capture. |
+| **Exposure** | `tonal_dr.clipping.highlight_clip_pct` / `shadow_clip_pct` + `dynamic_range.usable_span_0_255` | Clipping in the *subject* is the FAIL case; crushed blacks in a deliberately low-key background are not. Judge against the genre profile thresholds (below), not a fixed number. |
+| **Noise** | `noise_artifacts.luma_noise_sigma_proxy` (+ `noise_label_proxy`) | Compare to the profile's `noise.warn` / `noise.high`. High ISO grain in documentary work can be intentional — eyes decide. |
+| **Colour** | largest `tonal_dr.*.mean` channel difference + `color.white_balance.tint` / `cct_kelvin_proxy` | A cast only fails if it misrepresents the scene *and* the profile penalizes casts (B&W / night / abstract set the penalty to 0). |
+| **Artefacts** | `noise_artifacts.blockiness_flag` + `chromatic_aberration_edge_rb` + `stage0.estimated_compression` | Blockiness flag true + low bytes-per-pixel = heavy recompression. High CA on contrasty edges → lens artefact. |
+
+**Use the genre profile for fair thresholds.** Read `references/profiles.json` (an exact
+snapshot of the project's 14-genre `PROFILE_CONFIG`). Infer the genre from the image as a
+confidence-gated hypothesis; if you can't land it confidently, fall back to
+`studio_photography` (strictest). Then judge sharpness / clipping / noise / cast against *that
+profile's* numbers, so a low-key night frame isn't failed for the very darkness that defines it.
+This keeps the technical verdict auditable: "highlight_clip 6% exceeds landscape warn_pct 8%? no
+→ PASS on exposure" beats "looks a bit bright."
 
 ### 2. Editorial Merit
 
@@ -75,7 +128,10 @@ required: resolution and aspect ratio alignment.
 
 #### 3a. Aspect Ratio Check
 
-Pull dimensions from EXIF (Photo-Metadata-Helper will have run first):
+Use the **true pixel dimensions** — the measurement pass already has them in
+`/tmp/qr_*.json` (`stage0_ingest.width_px` / `height_px` / `aspect_ratio` / `megapixels`),
+which is the source of truth here because it reads the actual pixel grid, not a possibly-stale
+EXIF tag. `exiftool` is a fine cross-check:
 
 ```bash
 exiftool -ImageWidth -ImageHeight /root/Portraiture/inbox/My-Photo.jpg
@@ -99,20 +155,29 @@ For images outside tolerance, compute the **effective long edge** after a 2:3 cr
 
 Use the effective long edge — not the raw pixel count — in the resolution check below.
 
-#### 3b. Resolution Check
+#### 3b. Resolution Check (viewing-distance-aware — DPI is NOT fixed)
 
-Check effective long edge against the minimum at 240 dpi
-(the fine-art acceptable floor; 300 dpi is ideal):
+Required DPI is not constant. Bigger prints are viewed from farther away, so the per-inch
+demand drops as the print grows (rule of thumb: required ppi ≈ 3438 ÷ viewing-distance-in-inches).
+A flat 240-dpi-everywhere floor rejects large prints for resolution they don't actually need —
+a 60×90 cm wall piece seen from 1.5 m does not need the same ppi as an 8×12 held at arm's
+length. Check the **effective long edge** against the floor *for that size*:
 
-| Print size | 240 dpi minimum long edge | 300 dpi ideal long edge |
-|-----------|--------------------------|------------------------|
-| 20 × 30 cm (8 × 12 in) | 2 835 px | 3 543 px |
-| 40 × 60 cm (16 × 24 in) | 5 670 px | 7 087 px |
-| 60 × 90 cm (24 × 36 in) | 8 505 px | 10 630 px |
+| Print size | Typical viewing dist | Ideal dpi | Floor dpi | Floor long-edge px | Ideal long-edge px |
+|-----------|----------------------|-----------|-----------|--------------------|--------------------|
+| 20 × 30 cm (8 × 12 in)  | ~40 cm  | 300 | 240 | 2 835 px | 3 543 px |
+| 40 × 60 cm (16 × 24 in) | ~1 m    | 240 | 180 | 4 252 px | 5 670 px |
+| 60 × 90 cm (24 × 36 in) | ~1.5 m  | 200 | 150 | 5 315 px | 7 087 px |
 
-If the effective long edge falls below 2 835 px (20×30 minimum), it is a FAIL.
-If it meets some sizes but not all, note the maximum supportable size — this
-is a CONDITIONAL PASS with a size restriction the user should factor into the listing.
+A size is **supported** when the effective long edge meets that size's **floor**. At/above the
+**ideal** it is comfortably print-sharp; between floor and ideal is acceptable and worth a note
+in the listing.
+
+If the effective long edge falls below the smallest size's floor (2 835 px for 20×30), it is a
+FAIL. If it clears some sizes but not all, note the maximum supportable size — a CONDITIONAL
+PASS with a size restriction the listing must honour. (Note the floors now scale with size: an
+8 256 px file clears all three sizes here, where the old flat-240 rule would have capped it at
+40×60.)
 
 ## Verdicts
 
@@ -125,7 +190,9 @@ is a CONDITIONAL PASS with a size restriction the user should factor into the li
 ## Workflow
 
 1. **Scope** — list the files under review; note pixel dimensions for each
-2. **Downscale** — `magick` each file to `/tmp/qr_*`; HALT on any resize failure
+2. **Downscale & Measure** — `magick` each file to `/tmp/qr_*` at 2048px (HALT on any resize
+   failure); and run `scripts/analyze_image.py` on each **original** to `/tmp/qr_*.json` for the
+   deterministic technical evidence. Both happen before any verdict.
 3. **Duplicate Check** — before assigning any verdict, check for duplicates in two passes:
 
    **Pass A — byte-identical (within batch):**
@@ -148,7 +215,10 @@ is a CONDITIONAL PASS with a size restriction the user should factor into the li
    Stripe/size state, and a one-sentence distinction. Do NOT remove either entry until the user
    explicitly confirms which to drop.
 
-4. **Assess** — for each downscaled image, work through the three criteria in order
+4. **Assess** — for each image, work through the three criteria in order: drive **Technical**
+   and **Print-Readiness** from the measured JSON (`/tmp/qr_*.json`) against the genre profile,
+   and use the 2048px visual copy for **Editorial** merit and to confirm whether any flagged
+   technical miss is intentional rather than a defect
 5. **Verdict** — assign PASS / CONDITIONAL PASS / FAIL; write one-line reasons for every
    CONDITIONAL or FAIL criterion
 6. **Report** — structured table, one row per photo

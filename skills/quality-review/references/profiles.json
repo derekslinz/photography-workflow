@@ -1,0 +1,586 @@
+{
+  "_about": "EXACT snapshot of image_evaluator/core/profiles_data.py PROFILE_CONFIG (rules+post_process; PyIQA model_weights omitted as they only apply when the real pipeline runs). Used by the fallback scorer when the real pipeline is unavailable. Metric mapping from analyze_image.py: sharpness->focus_blur.global_sharpness_lapvar; clipping warn/hard vs tonal_dr.clipping.highlight_clip_pct; color_cast threshold vs max|R/G/B mean diff|; brightness min_ok/max_ok vs lighting.mean_luma; noise warn/high vs noise_artifacts.luma_noise_sigma_proxy (NOTE: real pipeline noise scale differs from the fallback proxy; treat noise thresholds as guidance in fallback mode).",
+  "fallback_profile": "studio_photography",
+  "profiles": {
+    "studio_photography": {
+      "name": "Studio Photography",
+      "profile_behavior": "standard",
+      "rules": {
+        "sharpness": {
+          "soft_threshold": 60.0,
+          "critical_threshold": 30.0,
+          "soft_penalty": 10.0,
+          "critical_penalty": 30.0
+        },
+        "clipping": {
+          "warn_pct": 5.0,
+          "hard_pct": 20.0,
+          "warn_penalty": 8.0,
+          "hard_penalty": 16.0,
+          "bonus_pct": 0.5,
+          "bonus_points": 5.0
+        },
+        "color_cast": {
+          "threshold": 15.0,
+          "penalty": 8.0
+        },
+        "brightness": {
+          "min_ok": 200.0,
+          "max_ok": 245.0,
+          "mild_penalty": 8.0,
+          "strong_penalty": 16.0
+        },
+        "noise": {
+          "warn": 30.0,
+          "high": 60.0,
+          "warn_penalty": 8.0,
+          "high_penalty": 18.0
+        }
+      },
+      "post_process": {
+        "base": 70,
+        "sharpness_heavy": 35.0,
+        "sharpness_soft": 60.0
+      }
+    },
+    "still_life": {
+      "name": "Still Life",
+      "profile_behavior": "conservative",
+      "rules": {
+        "sharpness": {
+          "soft_threshold": 65.0,
+          "critical_threshold": 35.0,
+          "soft_penalty": 10.0,
+          "critical_penalty": 30.0
+        },
+        "clipping": {
+          "warn_pct": 3.0,
+          "hard_pct": 15.0,
+          "warn_penalty": 8.0,
+          "hard_penalty": 16.0,
+          "bonus_pct": 0.5,
+          "bonus_points": 5.0
+        },
+        "color_cast": {
+          "threshold": 12.0,
+          "penalty": 8.0
+        },
+        "brightness": {
+          "min_ok": 180.0,
+          "max_ok": 240.0,
+          "mild_penalty": 8.0,
+          "strong_penalty": 16.0
+        },
+        "noise": {
+          "warn": 25.0,
+          "high": 50.0,
+          "warn_penalty": 8.0,
+          "high_penalty": 18.0
+        }
+      },
+      "post_process": {
+        "base": 70,
+        "sharpness_heavy": 35.0,
+        "sharpness_soft": 60.0
+      }
+    },
+    "macro_food": {
+      "name": "Macro/Food Photography",
+      "profile_behavior": "conservative",
+      "rules": {
+        "sharpness": {
+          "soft_threshold": 65.0,
+          "critical_threshold": 35.0,
+          "soft_penalty": 10.0,
+          "critical_penalty": 30.0
+        },
+        "clipping": {
+          "warn_pct": 10.0,
+          "hard_pct": 35.0,
+          "warn_penalty": 6.0,
+          "hard_penalty": 14.0
+        },
+        "color_cast": {
+          "threshold": 28.0,
+          "penalty": 5.0
+        },
+        "brightness": {
+          "min_ok": 55.0,
+          "max_ok": 220.0,
+          "mild_penalty": 5.0,
+          "strong_penalty": 12.0
+        },
+        "noise": {
+          "warn": 30.0,
+          "high": 55.0,
+          "warn_penalty": 8.0,
+          "high_penalty": 16.0
+        }
+      },
+      "post_process": {
+        "base": 70,
+        "sharpness_heavy": 40.0,
+        "sharpness_soft": 65.0
+      }
+    },
+    "macro_nature": {
+      "name": "Macro/Nature Photography",
+      "profile_behavior": "standard",
+      "rules": {
+        "sharpness": {
+          "soft_threshold": 25.0,
+          "critical_threshold": 15.0,
+          "soft_penalty": 6.0,
+          "critical_penalty": 15.0,
+          "ideal": 45.0,
+          "lower_ok": 30.0,
+          "max_penalty": 15.0
+        },
+        "clipping": {
+          "warn_pct": 8.0,
+          "hard_pct": 30.0,
+          "warn_penalty": 6.0,
+          "hard_penalty": 14.0
+        },
+        "color_cast": {
+          "threshold": 20.0,
+          "penalty": 4.0
+        },
+        "brightness": {
+          "min_ok": 80.0,
+          "max_ok": 230.0,
+          "mild_penalty": 5.0,
+          "strong_penalty": 12.0
+        },
+        "noise": {
+          "warn": 35.0,
+          "high": 60.0,
+          "warn_penalty": 6.0,
+          "high_penalty": 14.0
+        }
+      },
+      "post_process": {
+        "base": 72,
+        "sharpness_heavy": 35.0,
+        "sharpness_soft": 60.0
+      }
+    },
+    "portrait": {
+      "name": "Portrait (Neutral/Studio)",
+      "profile_behavior": "standard",
+      "rules": {
+        "max_rule_penalty": 15.0,
+        "sharpness": {
+          "soft_threshold": 55.0,
+          "critical_threshold": 25.0,
+          "soft_penalty": 12.0,
+          "critical_penalty": 32.0
+        },
+        "clipping": {
+          "warn_pct": 10.0,
+          "hard_pct": 40.0,
+          "warn_penalty": 6.0,
+          "hard_penalty": 14.0,
+          "bonus_pct": 1.0,
+          "bonus_points": 3.0
+        },
+        "color_cast": {
+          "threshold": 12.0,
+          "penalty": 10.0
+        },
+        "brightness": {
+          "min_ok": 100.0,
+          "max_ok": 200.0,
+          "mild_penalty": 6.0,
+          "strong_penalty": 14.0
+        },
+        "noise": {
+          "warn": 35.0,
+          "high": 65.0,
+          "warn_penalty": 8.0,
+          "high_penalty": 16.0
+        }
+      },
+      "post_process": {
+        "base": 70,
+        "sharpness_heavy": 30.0,
+        "sharpness_soft": 55.0
+      }
+    },
+    "landscape": {
+      "name": "Landscape/Nature",
+      "profile_behavior": "standard",
+      "rules": {
+        "max_rule_penalty": 15.0,
+        "sharpness": {
+          "soft_threshold": 60.0,
+          "critical_threshold": 30.0,
+          "soft_penalty": 10.0,
+          "critical_penalty": 28.0
+        },
+        "clipping": {
+          "warn_pct": 8.0,
+          "hard_pct": 35.0,
+          "warn_penalty": 8.0,
+          "hard_penalty": 16.0,
+          "bonus_pct": 0.5,
+          "bonus_points": 4.0
+        },
+        "color_cast": {
+          "threshold": 18.0,
+          "penalty": 5.0
+        },
+        "brightness": {
+          "min_ok": 100.0,
+          "max_ok": 200.0,
+          "mild_penalty": 6.0,
+          "strong_penalty": 14.0
+        },
+        "noise": {
+          "warn": 30.0,
+          "high": 60.0,
+          "warn_penalty": 8.0,
+          "high_penalty": 16.0
+        }
+      },
+      "post_process": {
+        "base": 70,
+        "sharpness_heavy": 35.0,
+        "sharpness_soft": 60.0
+      }
+    },
+    "street_documentary": {
+      "name": "Street/Documentary",
+      "profile_behavior": "standard",
+      "rules": {
+        "max_rule_penalty": 12.0,
+        "sharpness": {
+          "soft_threshold": 45.0,
+          "critical_threshold": 20.0,
+          "soft_penalty": 6.0,
+          "critical_penalty": 18.0
+        },
+        "clipping": {
+          "warn_pct": 10.0,
+          "hard_pct": 45.0,
+          "warn_penalty": 4.0,
+          "hard_penalty": 10.0,
+          "bonus_pct": 2.0,
+          "bonus_points": 2.0
+        },
+        "color_cast": {
+          "threshold": 22.0,
+          "penalty": 4.0
+        },
+        "brightness": {
+          "min_ok": 50.0,
+          "max_ok": 200.0,
+          "mild_penalty": 4.0,
+          "strong_penalty": 10.0
+        },
+        "noise": {
+          "warn": 40.0,
+          "high": 75.0,
+          "warn_penalty": 4.0,
+          "high_penalty": 10.0
+        }
+      },
+      "post_process": {
+        "base": 70,
+        "sharpness_heavy": 25.0,
+        "sharpness_soft": 45.0
+      }
+    },
+    "sports_action": {
+      "name": "Sports/Action",
+      "profile_behavior": "standard",
+      "rules": {
+        "max_rule_penalty": 15.0,
+        "sharpness": {
+          "soft_threshold": 55.0,
+          "critical_threshold": 25.0,
+          "soft_penalty": 10.0,
+          "critical_penalty": 28.0
+        },
+        "clipping": {
+          "warn_pct": 8.0,
+          "hard_pct": 35.0,
+          "warn_penalty": 6.0,
+          "hard_penalty": 14.0,
+          "bonus_pct": 1.0,
+          "bonus_points": 3.0
+        },
+        "color_cast": {
+          "threshold": 20.0,
+          "penalty": 6.0
+        },
+        "brightness": {
+          "min_ok": 80.0,
+          "max_ok": 220.0,
+          "mild_penalty": 5.0,
+          "strong_penalty": 12.0
+        },
+        "noise": {
+          "warn": 40.0,
+          "high": 70.0,
+          "warn_penalty": 6.0,
+          "high_penalty": 12.0
+        }
+      },
+      "post_process": {
+        "base": 70,
+        "sharpness_heavy": 30.0,
+        "sharpness_soft": 55.0
+      }
+    },
+    "wildlife_animal": {
+      "name": "Wildlife/Animal Photography",
+      "profile_behavior": "standard",
+      "rules": {
+        "max_rule_penalty": 15.0,
+        "sharpness": {
+          "soft_threshold": 50.0,
+          "critical_threshold": 25.0,
+          "soft_penalty": 10.0,
+          "critical_penalty": 26.0
+        },
+        "clipping": {
+          "warn_pct": 6.0,
+          "hard_pct": 25.0,
+          "warn_penalty": 5.0,
+          "hard_penalty": 12.0
+        },
+        "color_cast": {
+          "threshold": 18.0,
+          "penalty": 5.0
+        },
+        "brightness": {
+          "min_ok": 60.0,
+          "max_ok": 220.0,
+          "mild_penalty": 5.0,
+          "strong_penalty": 12.0
+        },
+        "noise": {
+          "warn": 35.0,
+          "high": 65.0,
+          "warn_penalty": 6.0,
+          "high_penalty": 14.0
+        }
+      },
+      "post_process": {
+        "base": 72,
+        "sharpness_heavy": 30.0,
+        "sharpness_soft": 50.0
+      }
+    },
+    "night": {
+      "name": "Night",
+      "profile_behavior": "standard",
+      "rules": {
+        "max_rule_penalty": 12.0,
+        "sharpness": {
+          "soft_threshold": 40.0,
+          "critical_threshold": 15.0,
+          "soft_penalty": 4.0,
+          "critical_penalty": 12.0
+        },
+        "clipping": {
+          "warn_pct": 20.0,
+          "hard_pct": 70.0,
+          "warn_penalty": 2.0,
+          "hard_penalty": 8.0,
+          "bonus_pct": 3.0,
+          "bonus_points": 2.0
+        },
+        "color_cast": {
+          "threshold": 30.0,
+          "penalty": 0.0
+        },
+        "brightness": {
+          "min_ok": 10.0,
+          "max_ok": 120.0,
+          "mild_penalty": 3.0,
+          "strong_penalty": 8.0
+        },
+        "noise": {
+          "warn": 55.0,
+          "high": 85.0,
+          "warn_penalty": 4.0,
+          "high_penalty": 10.0
+        }
+      },
+      "post_process": {
+        "base": 70,
+        "sharpness_heavy": 20.0,
+        "sharpness_soft": 40.0
+      }
+    },
+    "long_exposure": {
+      "name": "Long Exposure",
+      "profile_behavior": "standard",
+      "rules": {
+        "max_rule_penalty": 12.0,
+        "sharpness": {
+          "soft_threshold": 30.0,
+          "critical_threshold": 10.0,
+          "soft_penalty": 3.0,
+          "critical_penalty": 10.0
+        },
+        "clipping": {
+          "warn_pct": 15.0,
+          "hard_pct": 50.0,
+          "warn_penalty": 2.0,
+          "hard_penalty": 8.0,
+          "bonus_pct": 2.0,
+          "bonus_points": 2.0
+        },
+        "color_cast": {
+          "threshold": 30.0,
+          "penalty": 0.0
+        },
+        "brightness": {
+          "min_ok": 15.0,
+          "max_ok": 200.0,
+          "mild_penalty": 3.0,
+          "strong_penalty": 8.0
+        },
+        "noise": {
+          "warn": 55.0,
+          "high": 80.0,
+          "warn_penalty": 4.0,
+          "high_penalty": 10.0
+        }
+      },
+      "post_process": {
+        "base": 70,
+        "sharpness_heavy": 15.0,
+        "sharpness_soft": 30.0
+      }
+    },
+    "architecture_realestate": {
+      "name": "Architecture/Real Estate",
+      "profile_behavior": "conservative",
+      "rules": {
+        "sharpness": {
+          "soft_threshold": 65.0,
+          "critical_threshold": 30.0,
+          "soft_penalty": 10.0,
+          "critical_penalty": 30.0
+        },
+        "clipping": {
+          "warn_pct": 8.0,
+          "hard_pct": 35.0,
+          "warn_penalty": 8.0,
+          "hard_penalty": 16.0,
+          "bonus_pct": 0.5,
+          "bonus_points": 4.0
+        },
+        "color_cast": {
+          "threshold": 15.0,
+          "penalty": 8.0
+        },
+        "brightness": {
+          "min_ok": 120.0,
+          "max_ok": 220.0,
+          "mild_penalty": 6.0,
+          "strong_penalty": 14.0
+        },
+        "noise": {
+          "warn": 30.0,
+          "high": 55.0,
+          "warn_penalty": 8.0,
+          "high_penalty": 18.0
+        }
+      },
+      "post_process": {
+        "base": 70,
+        "sharpness_heavy": 35.0,
+        "sharpness_soft": 65.0
+      }
+    },
+    "black_white": {
+      "name": "Black & White/Monochrome",
+      "profile_behavior": "standard",
+      "rules": {
+        "max_rule_penalty": 12.0,
+        "sharpness": {
+          "soft_threshold": 50.0,
+          "critical_threshold": 25.0,
+          "soft_penalty": 5.0,
+          "critical_penalty": 14.0
+        },
+        "clipping": {
+          "warn_pct": 15.0,
+          "hard_pct": 60.0,
+          "warn_penalty": 2.0,
+          "hard_penalty": 8.0,
+          "bonus_pct": 3.0,
+          "bonus_points": 3.0
+        },
+        "color_cast": {
+          "threshold": 999.0,
+          "penalty": 0.0
+        },
+        "brightness": {
+          "min_ok": 30.0,
+          "max_ok": 220.0,
+          "mild_penalty": 3.0,
+          "strong_penalty": 8.0
+        },
+        "noise": {
+          "warn": 45.0,
+          "high": 75.0,
+          "warn_penalty": 4.0,
+          "high_penalty": 10.0
+        }
+      },
+      "post_process": {
+        "base": 72,
+        "sharpness_heavy": 30.0,
+        "sharpness_soft": 50.0
+      }
+    },
+    "abstract": {
+      "name": "Abstract/Creative/Experimental",
+      "profile_behavior": "creative",
+      "rules": {
+        "max_rule_penalty": 10.0,
+        "sharpness": {
+          "soft_threshold": 25.0,
+          "critical_threshold": 10.0,
+          "soft_penalty": 2.0,
+          "critical_penalty": 10.0
+        },
+        "clipping": {
+          "warn_pct": 25.0,
+          "hard_pct": 90.0,
+          "warn_penalty": 2.0,
+          "hard_penalty": 8.0,
+          "bonus_pct": 5.0,
+          "bonus_points": 2.0
+        },
+        "color_cast": {
+          "threshold": 25.0,
+          "penalty": 0.0
+        },
+        "brightness": {
+          "min_ok": 0.0,
+          "max_ok": 255.0,
+          "mild_penalty": 0.0,
+          "strong_penalty": 0.0
+        },
+        "noise": {
+          "warn": 60.0,
+          "high": 90.0,
+          "warn_penalty": 2.0,
+          "high_penalty": 6.0
+        }
+      },
+      "post_process": {
+        "base": 70,
+        "sharpness_heavy": 15.0,
+        "sharpness_soft": 25.0
+      }
+    }
+  }
+}
