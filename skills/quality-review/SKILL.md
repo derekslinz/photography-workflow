@@ -173,11 +173,20 @@ A size is **supported** when the effective long edge meets that size's **floor**
 **ideal** it is comfortably print-sharp; between floor and ideal is acceptable and worth a note
 in the listing.
 
-If the effective long edge falls below the smallest size's floor (2 835 px for 20×30), it is a
-FAIL. If it clears some sizes but not all, note the maximum supportable size — a CONDITIONAL
-PASS with a size restriction the listing must honour. (Note the floors now scale with size: an
-8 256 px file clears all three sizes here, where the old flat-240 rule would have capped it at
-40×60.)
+**~5% grace band.** Treat an effective long edge within 5% of a floor (≥ 0.95 × floor) as
+qualifying — the difference between ~228 and 240 dpi is imperceptible at fine-art viewing
+distances, so a near-miss is not restricted.
+
+**Upscaling is a separate flag.** If a file only clears a size because it was AI-upscaled, flag
+it for *interpolation* (a CONDITIONAL reservation), not as a dpi failure — the two concerns are
+independent.
+
+If the effective long edge falls below the smallest size's floor minus grace (≈2 693 px for
+20×30), the photo can't print at any offered size → FAIL. Otherwise record the **maximum
+supportable size** as a listing ceiling. A pure size cap (e.g. supports up to 40×60 only) with
+all quality factors ≥3 stays a ✅ PASS with that ceiling — resolution-for-max-size is a listing
+parameter, not a quality reservation (see Verdict derivation). An 8 256 px file clears all three
+sizes here, where the old flat-240 rule would have capped it at 40×60.
 
 ## Verdicts
 
@@ -221,7 +230,7 @@ PASS with a size restriction the listing must honour. (Note the floors now scale
    technical miss is intentional rather than a defect
 5. **Verdict** — assign PASS / CONDITIONAL PASS / FAIL; write one-line reasons for every
    CONDITIONAL or FAIL criterion
-6. **Report** — structured table, one row per photo
+6. **Report** — the mandatory multi-factor scoring table (see Report Format), one row per photo, every factor column scored 1–5
 7. **Decision** — for FAIL photos, surface options to the user:
    - Delete from inbox
    - Keep in inbox for re-edit / reshoot
@@ -230,17 +239,59 @@ PASS with a size restriction the listing must honour. (Note the floors now scale
 
 ## Report Format
 
+**ALWAYS print the multi-factor scoring table below — one row per photo, every factor column scored.**
+This is mandatory on every run, including a single photo. Never collapse the per-factor columns
+into a single "Technical"/"Editorial" cell; the per-factor breakdown is the point — it shows *why*
+a verdict landed where it did and makes borderline calls auditable.
+
+Score each factor **1–5** against this anchored scale:
+
+| Score | Meaning |
+|------|---------|
+| **5** | Exceptional — gallery-reference execution on this axis. **Rare; reserve it.** |
+| **4** | Strong — clearly above the commercial standard |
+| **3** | Competent — meets the commercial fine-art bar. **This is where most professional work lands.** |
+| **2** | Weak — a noticeable, real deficiency on this axis |
+| **1** | Disqualifying |
+
+**Calibration check — guard against top-heavy scoring.** A competent commercial frame is a **3**, not a
+5. If most photos in a batch are scoring 4–5 across the board, you are not discriminating — re-anchor and
+spread the scores. Expect a real distribution: 5s should be rare, most factors should sit at 3–4, and
+genuine weaknesses must be scored 2 (don't round a real flaw up to 3 to be kind). **Differentiation pulls
+redundant near-duplicates down:** when several frames cover the same subject/scene, only the strongest one
+or two keep high Subject/Impact scores; the rest drop — being the fifth competent version of the same shot
+is itself a weakness. The scores exist to separate photos, not to flatter them.
+
+The columns mirror the three criteria defined above:
+
+- **Technical:** Focus · Exposure · Noise · Colour · Artefacts
+- **Editorial:** Subject · Composition · Impact (Differentiation noted in Notes when relevant)
+- **Print:** the maximum supportable size from the resolution check (not a 1–5 score)
+- **Avg:** the mean of the eight factor scores (Σ ÷ 8), to one decimal — a single sortable
+  quality signal. Use it to rank a batch and spot the weak frames at a glance; it does **not**
+  override the verdict (a single 1 still governs). Typical competent
+  work lands around **3.3–4.0**; a batch whose averages all exceed 4.3 is a calibration red flag.
+
 ```
 Quality Review — {n} photos
 
-| File | Technical | Editorial | Print-ready | Verdict | Notes |
-|------|-----------|-----------|-------------|---------|-------|
-| my-photo.jpg | PASS | Strong | 40×60 max | ⚠️ CONDITIONAL | Noise limits to 40×60cm and below |
-| another.jpg  | PASS | Adequate | All sizes  | ✅ PASS | — |
-| third.jpg    | FAIL | Weak     | All sizes  | ❌ FAIL | Subject out of focus; composition has no clear anchor |
+| File | Foc | Exp | Noi | Col | Art | Subj | Comp | Impact | Avg | Print (max) | Verdict | Notes |
+|------|:---:|:---:|:---:|:---:|:---:|:----:|:----:|:------:|:---:|-------------|---------|-------|
+| my-photo.jpg     | 4 | 3 | 2 | 4 | 4 | 4 | 4 | 3 | 3.5 | 40×60 | ⚠️ CONDITIONAL | Noise (2) is a real flaw; also caps print at ≤40×60cm |
+| another.jpg      | 4 | 4 | 4 | 5 | 4 | 4 | 5 | 5 | 4.4 | 40×60 | ✅ PASS | all factors ≥3; 40×60 ceiling is a resolution/listing parameter, not a quality reservation |
+| third.jpg        | 1 | 3 | 4 | 3 | 4 | 2 | 2 | 2 | 2.6 | 60×90 | ❌ FAIL | Subject out of focus (1); no compositional anchor |
 ```
 
-For every ❌ FAIL row, follow with a short paragraph explaining the specific issue and what,
+**Verdict derivation (deterministic from the scores):**
+- Any factor scored **1**, OR two or more editorial factors **≤2** → ❌ **FAIL**
+- Any factor scored **2**, OR a noted reservation
+  (e.g. AI-upscaled, mild artefacts) → ⚠️ **CONDITIONAL PASS**
+- All factors **≥3** → ✅ **PASS**. The maximum supportable print size is recorded in the
+  Print column as a listing/ladder parameter — a cap below the largest size (e.g. 40×60) does
+  **not** by itself lower the verdict. Resolution-for-max-size is not a quality reservation.
+
+The Notes cell must name every factor scored ≤3 and the reason, so the score is never a bare number.
+For every ❌ FAIL row, follow the table with a short paragraph explaining the specific issue and what,
 if anything, could be done to recover it (crop, resend for re-edit, discard).
 
 ## Calibrated Judgment
@@ -254,6 +305,7 @@ user has the final call on every FAIL.
 
 ## Gotchas
 
+- **The multi-factor scoring table is mandatory on every run — even for a single photo.** Score all eight factors (Focus, Exposure, Noise, Colour, Artefacts, Subject, Composition, Impact) 1–5 per photo and derive the verdict from the scores. Never collapse the per-factor columns into a single Technical/Editorial cell, and never emit a verdict without the table.
 - **Duplicate check is mandatory at step 3 — both byte-identical (MD5) and semantic near-duplicates (same shoot, same subject).** Do not assign verdicts until the duplicate scan is complete. Never remove an entry without explicit user confirmation of which to drop.
 - **No Stripe changes without explicit permission.** Quality review produces verdicts and recommendations only. Do not archive products, deactivate prices, or modify any Stripe objects — not even as a "logical next step" after a sweep. Wait for the user to confirm before touching Stripe.
 - Motion blur is often intentional in travel and documentary work — look at the whole image
@@ -266,8 +318,11 @@ user has the final call on every FAIL.
 - **Aspect ratio matters for resolution.** A wide-panoramic image (AR > 1.636) loses resolution
   when cropped to 2:3 — use the effective long edge (short edge × 1.5), not the raw long edge,
   when checking against the dpi thresholds.
-- A photo that cannot support 60×90cm but supports 40×60cm and 20×30cm is a CONDITIONAL
-  PASS, not a FAIL — note the maximum size in the listing.
+- A pure size cap is **not** a verdict reduction. A photo with all quality factors ≥3 that
+  only supports 40×60cm and 20×30cm is a ✅ PASS with a 40×60 listing ceiling — not a CONDITIONAL
+  PASS. Resolution-for-max-size is a listing parameter; the verdict comes from the factor scores
+  (see Verdict derivation). CONDITIONAL is for real quality reservations (a factor at 2, mild
+  artefacts, AI-upscaling), not for a clean photo that simply prints large only up to a point.
 
 ## When to invoke
 
