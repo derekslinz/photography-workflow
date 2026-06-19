@@ -20,6 +20,8 @@ await sharp(srcPath)
 
 Output location: a scratch dir scoped to the active audit (e.g. `<workdir>/downscaled/`). Originals are never modified. If any resize fails, stop and ask — do NOT skip and continue.
 
+**Discretionary escalation to 2048px (identifiability only).** 1024px is the default and is enough to classify the vast majority of cases. But when identifiability is genuinely borderline at 1024px — a face small in the frame, partially turned, or soft — and that single judgement is what decides HARD-FLAG vs OK, re-downscale *that one image* to 2048px and look again before deciding. Under-resolving can wrongly clear a release flag, which is the expensive direction to be wrong in. Use this sparingly, per-image, and only to resolve identifiability — not as a new default (it costs ~4× the view tokens). `magick "$FILE" -resize "2048x2048>" "$OUT"` (or `width: 2048` in the sharp call). When in doubt about a person who could be identifiable, escalate rather than guess.
+
 This rule exists because description-only judgments (carry-over notes from prior sessions, captions, IPTC metadata) lie. Pixels don't. The gate has demonstrably caught description-only HARD-FLAGs that the actual frame falsified — back-turned subjects mislabeled as frontal, glass-distorted faces mislabeled as identifiable.
 
 ## Intake Sequence (Step 4 of 5)

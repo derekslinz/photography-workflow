@@ -213,7 +213,7 @@ This is the one place in the pipeline where calibrated debate does not apply —
 ## Gotchas
 
 - The user's catalog source-of-truth, sales platform, and derived-list generator are project-specific — the skill asks at run time, never assumes.
-- CONDITIONAL PASS size restrictions from quality-review are *binding* — do not create sales-platform prices for sizes the photo can't print at 240 dpi.
+- CONDITIONAL PASS size restrictions from quality-review are *binding* — do not create sales-platform prices for any size the photo failed on quality-review's viewing-distance-aware resolution ladder (each size has its own dpi floor — 240/180/150 for 20×30 / 40×60 / 60×90 — not a flat 240).
 - Portfolio-only (Bucket 2) photos go to the gallery list but get no sales-platform product. The catalog entry retains an empty `sizes[]` and no `salesPlatformProductId`.
 - A photo that ships with a model-release HARD-FLAG cleared by an on-file release should record the release ID in the catalog entry — so future audits can verify provenance without re-asking.
 - If the publish run is interrupted between catalog write and sales-platform create, the next run sees a catalog entry with no product ID — treat that as a resumable state, not a duplicate.
