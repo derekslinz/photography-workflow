@@ -134,7 +134,7 @@ which is the source of truth here because it reads the actual pixel grid, not a 
 EXIF tag. `exiftool` is a fine cross-check:
 
 ```bash
-exiftool -ImageWidth -ImageHeight /root/Portraiture/inbox/My-Photo.jpg
+exiftool -ImageWidth -ImageHeight /root/intake/My-Photo.jpg
 ```
 
 Compute AR = width ÷ height (landscape) or height ÷ width (portrait — always use the
@@ -234,7 +234,7 @@ sizes here, where the old flat-240 rule would have capped it at 40×60.
 7. **Decision** — for FAIL photos, surface options to the user:
    - Delete from inbox
    - Keep in inbox for re-edit / reshoot
-   - Move to `/root/Portraiture/rejected/` for later review
+   - Move to `/root/intake/_rejected/` for later review
 8. **Proceed** — PASS and CONDITIONAL PASS photos continue to property-release-review; FAIL photos wait
 
 ## Report Format
