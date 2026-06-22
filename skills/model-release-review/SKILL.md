@@ -1,26 +1,26 @@
 ---
 name: model-release-review
-description: "Audits a commercial-photography catalog for entries that require a signed model release. Four-tier classification (HARD-FLAG / SOFT-FLAG / OK / EXEMPT) keyed to identifiability-to-the-general-public, not facial recognition alone. Stricter bar for children (parental release) and workers at workplaces. Mandatory 1024px-long-edge downscale before viewing any image — pixels falsify description-only assumptions every time. Pairs with property-release-review for the rights side of the same catalog. USE WHEN model release review, person release, can I sell this print, identifiable person audit, candid model audit, child in catalog, worker in catalog, portrait release audit. NOT FOR property/architecture/artwork rights (use property-release-review)."
+description: "Audits a commercial-photography catalog for entries that require a signed model release. Four-tier classification (HARD-FLAG / SOFT-FLAG / OK / EXEMPT) keyed to identifiability-to-the-general-public, not facial recognition alone. Stricter bar for children (parental release) and workers at workplaces. Mandatory 2048px-long-edge downscale before viewing any image — pixels falsify description-only assumptions every time. Pairs with property-release-review for the rights side of the same catalog. USE WHEN model release review, person release, can I sell this print, identifiable person audit, candid model audit, child in catalog, worker in catalog, portrait release audit. NOT FOR property/architecture/artwork rights (use property-release-review)."
 effort: medium
 ---
 
-## 🚨 MANDATORY FIRST ACTION: Downscale Every Image to 1024px Long Edge
+## 🚨 MANDATORY FIRST ACTION: Downscale Every Image to 2048px Long Edge
 
-**Before reading or classifying ANY image, downscale to 1024px on the long edge. Process only the downscaled copy. If resize fails, HALT and prompt the user.**
+**Before reading or classifying ANY image, downscale to 2048px on the long edge. Process only the downscaled copy. If resize fails, HALT and prompt the user.**
 
 ```typescript
 import sharp from "sharp";
 await sharp(srcPath)
-  .resize({ width: 1024, height: 1024, fit: "inside", withoutEnlargement: true })
+  .resize({ width: 2048, height: 2048, fit: "inside", withoutEnlargement: true })
   .jpeg({ quality: 82, mozjpeg: true })
   .toFile(outPath);
 ```
 
-`magick "$FILE" -resize "1024x1024>" "$OUT"` is an acceptable ImageMagick fallback.
+`magick "$FILE" -resize "2048x2048>" "$OUT"` is an acceptable ImageMagick fallback.
 
 Output location: a scratch dir scoped to the active audit (e.g. `<workdir>/downscaled/`). Originals are never modified. If any resize fails, stop and ask — do NOT skip and continue.
 
-**Discretionary escalation to 2048px (identifiability only).** 1024px is the default and is enough to classify the vast majority of cases. But when identifiability is genuinely borderline at 1024px — a face small in the frame, partially turned, or soft — and that single judgement is what decides HARD-FLAG vs OK, re-downscale *that one image* to 2048px and look again before deciding. Under-resolving can wrongly clear a release flag, which is the expensive direction to be wrong in. Use this sparingly, per-image, and only to resolve identifiability — not as a new default (it costs ~4× the view tokens). `magick "$FILE" -resize "2048x2048>" "$OUT"` (or `width: 2048` in the sharp call). When in doubt about a person who could be identifiable, escalate rather than guess.
+**When identifiability remains borderline even at 2048px:** 2048px is the maximum resolution for batch auditing and resolves nearly all cases. When a face is small enough, far enough, occluded enough, or turned enough that you cannot confidently assign HARD-FLAG vs OK even at full downscale resolution, do not guess — escalate to human judgment. Wrongly clearing a release flag (letting a person be sold without consent) is the expensive direction to be wrong in. Document the reason ("face too small", "partially obscured", "half-turned") and mark for escalation.
 
 This rule exists because description-only judgments (carry-over notes from prior sessions, captions, IPTC metadata) lie. Pixels don't. The gate has demonstrably caught description-only HARD-FLAGs that the actual frame falsified — back-turned subjects mislabeled as frontal, glass-distorted faces mislabeled as identifiable.
 
@@ -86,7 +86,7 @@ Posed/commissioned portraits are HARD-FLAG by series convention, but a working p
 ## Calibrated Debate, Not Capitulation
 
 When the user challenges a flag, debate it honestly:
-1. Re-apply the 1024-gate (downscale + view the actual pixels)
+1. Re-apply the 2048-gate (downscale + view the actual pixels)
 2. State the strongest counter-argument you can find
 3. Test it against the identifiability standard
 4. Concede when the argument is dispositive; name residual risk when not
@@ -97,7 +97,7 @@ The downscale gate exists because pixels routinely falsify carry-over notes — 
 
 1. **Scope** — read the catalog, count entries, separate exempt category(ies) from non-exempt
 2. **Preliminary classification from descriptions/series** — portraits HARD-FLAG (audit), architecture-only OK by default, anything with humans → needs visual
-3. **Visual verification (1024-gate MANDATORY)** — downscale every non-OK candidate, view, classify
+3. **Visual verification (2048-gate MANDATORY)** — downscale every non-OK candidate, view, classify
 4. **Spot-check** — pick ≥2 OK-by-description entries, downscale + view, confirm
 5. **Structured report** — HARD-FLAG / SOFT-FLAG / OK / EXEMPT tiers; every HARD/SOFT has one-line reason; OK count tallied by exclusion
 6. **Surface decision points** — dispositions per HARD-FLAG (release file lookup, delist, or remove); flag any portraits where release status is uncertain
@@ -126,7 +126,7 @@ Originals of removed photos go to an archive dir, not deletion. Restoration must
 | Worker-at-workplace | ✓ (model release) | partial (where branded uniform / workplace property) |
 | Freedom-of-Panorama analysis | — | ✓ |
 | Owner-declared exempt category | ✓ | ✓ |
-| 1024-gate | ✓ | ✓ |
+| 2048-gate | ✓ | ✓ |
 | Debate-don't-capitulate | ✓ | ✓ |
 
 When a photo trips both — escalate via the sibling skill first (property) since trademark/permanent-artwork concerns are usually dispositive of the sale decision regardless of model release.

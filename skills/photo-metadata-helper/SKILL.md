@@ -40,11 +40,11 @@ If missing: `brew install exiftool` (macOS) or `apt install libimage-exiftool-pe
 
 ## Step 1 — View All Photos
 
-Before reading any image, downscale it to a maximum of 1024 pixels on the long edge:
+Before reading any image, downscale it to a maximum of 2048 pixels on the long edge:
 
 ```bash
 # Requires ImageMagick — check first: which magick || which convert
-magick "$FILE" -resize "1024x1024>" "/tmp/preview_$(basename "$FILE")"
+magick "$FILE" -resize "2048x2048>" "/tmp/preview_$(basename "$FILE")"
 ```
 
 **If the resize command fails** (ImageMagick not installed, unsupported format, permission error, etc.), stop immediately and ask the user how to proceed — do not fall back to reading the original full-sized file. Use `AskUserQuestion` with the specific error and options such as installing ImageMagick, skipping the affected file, or aborting the batch.
@@ -75,7 +75,63 @@ curl -s "https://nominatim.openstreetmap.org/reverse?format=json&lat=LAT&lon=LON
 
 Parse the `display_name` and `address` fields for the specific venue, street, neighborhood, and city. Use the most specific available name (e.g., "Hortus Botanicus Amsterdam, Drie-klimaten-kas" rather than just "Amsterdam"). This location context goes into titles, descriptions, and keywords.
 
+**The coordinates are the camera position, not the subject's location.** This distinction is mandatory, not pedantic:
+- **It only matters when the subject is a significant distance from the vantage.** For the common case — a near or in-scene subject — GPS *is* the subject's location; tag it directly and skip the rest of this block. Engage the vantage reasoning below only once you've judged the subject to be far off (the focal-length heuristic is your first cue).
+- The GPS tag records where the photographer stood. It equals the subject's location *only* when the subject is at or near the camera — a flower in the garden you're standing in, a dish on the table in front of you, a building you're beside.
+- For any distant subject — a mountain range, a skyline across the water, a coastline, a landmark on the horizon — the resolved location is the **vantage point**, not where the subject is. A peak photographed from ten miles away is not "at" your coordinates; placing it there is geographically impossible (you cannot stand on the summit and photograph it from a distance at the same time).
+- Decide per photo whether the subject is *here* (camera location describes it) or *over there* (camera location is only the viewpoint). When it's over there, phrase accordingly: "the Rockies seen from a ridge near Boulder", "the Manhattan skyline viewed from Brooklyn" — never "the Rockies, Boulder" or a keyword that asserts the subject sits at the camera's address.
+- When unsure how far the subject is, do not assert a subject location at all — describe what is visible and, at most, attribute the *vantage* ("photographed from …").
+
+**Use lens and camera-direction EXIF to inform the here-vs-there call — but know its limits.** Pull these alongside the coordinates:
+
+```bash
+exiftool -p '$FileName | $FocalLength | $FocalLengthIn35mmFormat | $LensModel | $GPSImgDirection $GPSImgDirectionRef | $SubjectDistance' /path/to/dir/*.jpg 2>/dev/null
+```
+
+- **Focal length is a strong distance heuristic.** A long focal length (telephoto, say 135mm-equivalent and up) is positive evidence the subject is distant → treat the GPS as a vantage, not the subject's location. A wide focal length means you likely captured the scene you were standing in → GPS plausibly describes the subject.
+- **Focal length and lens do NOT give bearing.** They tell you the field of view, not which direction the camera faced. By themselves they cannot place a distant subject.
+- **`GPSImgDirection`** (when present) is the compass bearing the camera was pointing. GPS + bearing gives you a *line of sight*; combined with a map you can form a *hypothesis* about which landmark lies along it. This is a hypothesis to corroborate against the visible image — never an identification asserted from EXIF alone. If `GPSImgDirection` is absent, you have no bearing and cannot infer a distant subject's location at all.
+- **`SubjectDistance`** is usually missing or pinned to "infinity" beyond a few dozen meters — do not rely on it for distant subjects.
+- **Terrain geometry constrains the candidates further.** The topography of the vantage limits what can be in frame: standing on the eastern slope of a range, the ridgeline rises to your west and you're looking out east — the peaks themselves can't be your distant subject, but the valley, foothills, or far range to the east can. Water, a known ridgeline, a coastline, or an obvious occluding landform all rule out whole arcs of the bearing. Use the resolved location plus the visible terrain to discard impossible candidates before settling on one.
+- Bottom line: GPS + lens + direction + terrain can *narrow candidates and shape the here-vs-there decision*, but they do not by themselves identify a distant subject. Confirm against what's actually in the frame before naming anything.
+
 If no GPS is present, skip this step and use contextual clues from the images themselves.
+
+## Step 2.5 — Read Capture Date & Time (Ground Truth for Title & Description)
+
+Before generating any metadata, extract the capture timestamp for every photo. This is a **required input to generation**, on equal footing with what you see in the image and the resolved location — not an optional check.
+
+```bash
+exiftool -p '$FileName | $DateTimeOriginal' /path/to/dir/*.jpg 2>/dev/null
+```
+
+`DateTimeOriginal` is the ground truth for *when* the shot was taken — both the **clock time** (time of day) and the **date** (season). Record both per photo and carry them into Step 3 alongside the visual observations from Step 1 and the location from Step 2. The timestamp governs every time-related claim that may appear in the title or description, on two axes:
+
+- **Time of day** — A photo stamped `12:47` was taken at midday; it cannot be titled or described as blue hour, golden hour, dawn, dusk, sunrise, sunset, or twilight, no matter how the light reads to the eye. Warm or blue light is **not** evidence of the hour: overcast, open shade, artificial light, white balance, and editing all produce it at any time of day.
+- **Season** — The *date* grounds any seasonal word (spring, summer, autumn/fall, winter, and their cues like "autumn foliage", "spring bloom", "summer light", "winter snow"). A photo dated in July is not "autumn" because the leaves look warm. Map date → season using the GPS **hemisphere**: latitude from Step 2 tells you which — June–August is summer in the northern hemisphere but winter in the southern. Visible cues (snow, blossoms, bare trees) describe *conditions*, which you may state literally; they do not by themselves license a *season* label that the date contradicts.
+- If `DateTimeOriginal` is missing, you have **no** time or date evidence — make no time-of-day or seasonal claim at all; describe only what is literally visible.
+
+The visible image tells you *what* and *how it looks*; the timestamp tells you *when*. Generation in Step 3 must respect all three. The full guard wording lives in Step 3 under the Description rules.
+
+## Step 2.6 — Check Calendar Context (Holidays & Events)
+
+With the location from Step 2 and the date from Step 2.5 both in hand, do a quick check for any holiday or notable event at that place around that date. This often surfaces real context — a market on King's Day, a parade, a festival, a religious observance — that sharpens the description and keywords.
+
+**Holidays (deterministic).** The country comes from Nominatim's `address.country_code` (Step 2); the year from `DateTimeOriginal` (Step 2.5). Query the free, no-auth Nager.Date API (ISO 3166-1 alpha-2, uppercase):
+
+```bash
+# COUNTRY = uppercased country_code from Step 2; YEAR from Step 2.5
+curl -s "https://date.nager.at/api/v3/PublicHolidays/${YEAR}/${COUNTRY}"
+```
+
+Compare the capture date to the returned holiday dates. Treat anything within a few days as *proximate* (festivities often run a window around the official day). Note the match — but see the guard below before it touches metadata.
+
+**Events (non-deterministic).** Local festivals, fairs, sporting events, and concerts have no reliable free lookup. Use well-known recurring events you're confident about (e.g., Carnival in Venice, Oktoberfest in Munich) only when the date and place line up — and always as a hypothesis to confirm against the image, never an assertion from the calendar alone.
+
+**Guard — coincidence is not depiction.** This mirrors the time/season guard:
+- A date falling on or near a holiday does **not** mean the photo depicts it. A quiet canal shot taken on King's Day is not "King's Day celebration" unless the image actually shows it (crowds, orange, flags, market stalls).
+- Fold a holiday or event into the title/description/keywords **only when the image corroborates it.** Otherwise drop it, or at most include it as soft context phrased as timing ("photographed on King's Day"), never as subject.
+- When the API returns nothing, or you have no confident event match, add nothing — silence is correct, invented festivity is not.
 
 ## Step 3 — Generate Metadata for Each Photo
 
@@ -94,10 +150,16 @@ For each photo, produce:
 - Mention photographic technique (macro, bokeh, backlighting) when it's a defining feature
 - End with a sentence that adds context or meaning beyond what's visible
 
+**Time guard — time of day AND season (applies to both the title and the description — read before writing any atmospheric or seasonal language):**
+- Time-of-day words — *blue hour, golden hour, dawn, dusk, sunrise, sunset, twilight, midday sun, evening light, morning light, night* — and seasonal words — *spring, summer, autumn/fall, winter*, and their cues ("autumn foliage", "spring bloom", "winter snow") — are **factual claims about when the photo was taken**, not mood adjectives. Use one only if it is consistent with the `DateTimeOriginal` clock time and date recorded in Step 2.5 (season also requires the GPS hemisphere — June is summer up north, winter down south).
+- If the timestamp says midday and the scene looks moody or warm, describe the *light itself* ("soft diffused light", "warm directional light", "deep shadows"), never the *hour* ("blue hour"). Warm or blue light is not evidence of the time of day — overcast, shade, artificial light, white balance, and editing all produce it at any hour. Likewise, warm foliage or a dusting of snow describes *conditions* you can state literally, but does not license a *season* label the date contradicts.
+- No `DateTimeOriginal` → no time-of-day or seasonal phrase at all. Default to describing what is literally visible.
+- This is a hard guard: a description that contradicts the timestamp is wrong even if it reads beautifully. When in doubt, drop the time or season reference entirely.
+
 **Keywords** (8–12 tags)
 - Mix subject-specific terms (species name, object type) with contextual ones (location, season, technique)
 - Include both the common name and scientific name for flora/fauna when known
-- Always include the venue/location name as a keyword if GPS was resolved
+- Include the resolved venue/location as a keyword when it describes the subject (subject is at the camera position). When the camera location is only the vantage onto a distant subject, tag the vantage as such (e.g., "viewed from Boulder") or omit it — don't assert the subject sits at your coordinates (see Step 2)
 - Avoid generic filler like "photo", "image", "picture"
 
 ## Step 4 — Write and Execute a Bash Script
@@ -201,10 +263,13 @@ Confirm the title, description word count, and keyword list all look correct. Cl
 
 | Pitfall | Fix |
 |---|---|
-| Reading full-res originals directly | Downscale to ≤1024px long edge first with `magick`; read the `/tmp/preview_*` copy |
+| Reading full-res originals directly | Downscale to ≤2048px long edge first with `magick`; read the `/tmp/preview_*` copy |
 | `.jpg_original` backup files created | Add `-overwrite_original` to every exiftool call |
 | New keywords appended to old ones | Include `-IPTC:Keywords=` (blank) before setting new keywords |
 | Misidentified subject (crozier vs caterpillar, etc.) | Review ambiguous shots carefully before writing — when uncertain, describe what you see literally |
 | GPS lookup returns neighborhood not venue | Use `zoom=18` in Nominatim URL for maximum specificity |
 | Very long filenames from long titles | Keep titles to 5–9 words; prioritize subject over adjectives |
 | Description word count outside 60–90 | Count words after drafting; trim or expand before embedding |
+| "Blue hour"/"golden hour" on a midday photo, or "autumn" on a July photo | Time-of-day and season are claims about capture date/time — read `DateTimeOriginal` (Step 2.5), map season via GPS hemisphere; describe light/conditions, not the hour or season |
+| Calling a photo a "King's Day celebration" because the date matches | Holiday/event proximity (Step 2.6) is context, not depiction — fold in only if the image shows it; otherwise omit or state as timing |
+| Distant subject labeled with the camera's GPS location | Coordinates are the vantage point, not where the subject is — a far mountain/skyline isn't "at" your address; phrase as "seen from …" or omit |

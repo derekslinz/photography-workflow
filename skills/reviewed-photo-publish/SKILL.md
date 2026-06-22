@@ -1,6 +1,6 @@
 ---
 name: reviewed-photo-publish
-description: "Step 5 of 5 in the photo intake pipeline. Takes a photo that has cleared metadata, quality, property, and model review and pushes it live — writes the catalog entry, creates the sales-platform product and child prices (one per supported print size), regenerates derived lists (for-sale, gallery, sitemap), moves the file from intake to the published location, and archives the original. Mandatory dry-run before any live sales-platform mutation. Mandatory 1024px-long-edge downscale for any pre-flight visual verification. USE WHEN: publish photo, list this print, push to sales, add to catalog, go live, finalize listing, complete the intake pipeline. NOT FOR: metadata tagging (use photo-metadata-helper), quality gating (use quality-review), rights audits (use property-release-review / model-release-review), or unpublishing a live entry (that's the remediation pipeline in property-release-review)."
+description: "Step 5 of 5 in the photo intake pipeline. Takes a photo that has cleared metadata, quality, property, and model review and pushes it live — writes the catalog entry, creates the sales-platform product and child prices (one per supported print size), regenerates derived lists (for-sale, gallery, sitemap), moves the file from intake to the published location, and archives the original. Mandatory dry-run before any live sales-platform mutation. Mandatory 2048px-long-edge downscale for any pre-flight visual verification. USE WHEN: publish photo, list this print, push to sales, add to catalog, go live, finalize listing, complete the intake pipeline. NOT FOR: metadata tagging (use photo-metadata-helper), quality gating (use quality-review), rights audits (use property-release-review / model-release-review), or unpublishing a live entry (that's the remediation pipeline in property-release-review)."
 effort: medium
 ---
 
@@ -32,15 +32,15 @@ Acceptable affirmations: "yes publish", "confirmed", "go", "ship it" — paired 
 
 This rule exists because Stripe mutations are visible to customers within seconds and file moves are not transactionally tied to the catalog write — a partial publish without explicit sign-off is the worst-case outcome of this pipeline.
 
-## 🚨 MANDATORY FIRST ACTION: Downscale Every Image to 1024px Long Edge
+## 🚨 MANDATORY FIRST ACTION: Downscale Every Image to 2048px Long Edge
 
-**Before reading any image for pre-flight verification, downscale to 1024px on the long edge. Process only the downscaled copy. If resize fails, HALT and prompt the user.**
+**Before reading any image for pre-flight verification, downscale to 2048px on the long edge. Process only the downscaled copy. If resize fails, HALT and prompt the user.**
 
 ```bash
-magick "$FILE" -resize "1024x1024>" "/tmp/pub_$(basename "$FILE")"
+magick "$FILE" -resize "2048x2048>" "/tmp/pub_$(basename "$FILE")"
 ```
 
-Publish does not classify images — it acts on verdicts already in place — but any pre-flight visual check (confirming the file opens, confirming dimensions match the chosen print sizes, confirming the right photo is being published) still goes through the gate. The gate is load-bearing across the whole pipeline; see `[[downscale-1024-gate-load-bearing]]` for why.
+Publish does not classify images — it acts on verdicts already in place — but any pre-flight visual check (confirming the file opens, confirming dimensions match the chosen print sizes, confirming the right photo is being published) still goes through the gate. The gate is load-bearing across the whole pipeline; see `[[downscale-gate-load-bearing]]` for why.
 
 Clean up `/tmp/pub_*` after publish completes.
 
@@ -77,7 +77,7 @@ If any of these is missing or ambiguous, the skill asks before doing anything.
    - Read upstream verdicts (from intake report, sidecar JSON, IPTC, or wherever the pipeline records them)
    - Confirm every step has an acceptable verdict per the table above
    - For any identifiable person, confirm `PersonInImage` is embedded and the model release is on file
-   - 1024-gate spot-check the image opens and matches the expected subject
+   - 2048-gate spot-check the image opens and matches the expected subject
    - HALT and surface if anything is missing — do not infer, do not default
 
 2. **Resolve print sizes**

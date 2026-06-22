@@ -46,12 +46,11 @@ magick "$FILE" -resize "2048x2048>" "/tmp/qr_$(basename "$FILE")"
 Read the downscaled file from `/tmp/qr_*` using the Read tool — never the full-res original.
 Clean up `/tmp/qr_*` after the review is complete.
 
-This stage uses 2048px rather than the pipeline's default 1024px on purpose: a print gate has
-to tell "soft" from "tack-sharp," and 1024px is too coarse to judge critical focus or fine
-detail. The visual copy is now for composition, subject, and editorial merit — the hard
-technical numbers come from the measurement pass below. The cross-cutting
-`[[downscale-images-before-processing]]` rule still governs the model's *viewing*; this is a
-deliberate per-stage override, not a relaxation of it.
+This stage uses 2048px, aligned with the pipeline default: a print gate has to tell "soft"
+from "tack-sharp," and lower resolution is too coarse to judge critical focus or fine detail.
+The visual copy is now for composition, subject, and editorial merit — the hard technical
+numbers come from the measurement pass below. The cross-cutting `[[downscale-gate-load-bearing]]`
+rule still governs the model's *viewing*: 2048px is the resolution cap.
 
 ### (b) Measurement pass — run the extractor on the ORIGINAL file
 

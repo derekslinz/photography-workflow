@@ -1,22 +1,22 @@
 ---
 name: property-release-review
-description: "Audits a commercial-photography catalog for entries that require property releases, trademark clearance, or copyright analysis on depicted subjects (buildings, interiors, permanent public artwork, branded venues, signage, vehicles). Four-bucket disposition (remove / delist / SOFT-FLAG / OK / EXEMPT). Mandatory 1024px-long-edge downscale before viewing any image. Sibling skill: model-release-review for the persons-in-frame side. USE WHEN property release, image rights, can I sell this print, trademark in catalog, copyright in catalog, freedom-of-panorama question, sculpture in frame, venue in frame, branded building, catalog rights audit. NOT FOR persons / model releases (use model-release-review)."
+description: "Audits a commercial-photography catalog for entries that require property releases, trademark clearance, or copyright analysis on depicted subjects (buildings, interiors, permanent public artwork, branded venues, signage, vehicles). Four-bucket disposition (remove / delist / SOFT-FLAG / OK / EXEMPT). Mandatory 2048px-long-edge downscale before viewing any image. Sibling skill: model-release-review for the persons-in-frame side. USE WHEN property release, image rights, can I sell this print, trademark in catalog, copyright in catalog, freedom-of-panorama question, sculpture in frame, venue in frame, branded building, catalog rights audit. NOT FOR persons / model releases (use model-release-review)."
 effort: medium
 ---
 
-## 🚨 MANDATORY FIRST ACTION: Downscale Every Image to 1024px Long Edge
+## 🚨 MANDATORY FIRST ACTION: Downscale Every Image to 2048px Long Edge
 
-**Before reading or classifying ANY image, downscale to 1024px on the long edge. Process only the downscaled copy. If resize fails, HALT and prompt the user.**
+**Before reading or classifying ANY image, downscale to 2048px on the long edge. Process only the downscaled copy. If resize fails, HALT and prompt the user.**
 
 ```typescript
 import sharp from "sharp";
 await sharp(srcPath)
-  .resize({ width: 1024, height: 1024, fit: "inside", withoutEnlargement: true })
+  .resize({ width: 2048, height: 2048, fit: "inside", withoutEnlargement: true })
   .jpeg({ quality: 82, mozjpeg: true })
   .toFile(outPath);
 ```
 
-`magick "$FILE" -resize "1024x1024>" "$OUT"` is an acceptable ImageMagick fallback.
+`magick "$FILE" -resize "2048x2048>" "$OUT"` is an acceptable ImageMagick fallback.
 
 Output location: a scratch dir scoped to the active audit (e.g. `<workdir>/downscaled/`). Originals are never modified. If any resize fails, stop and ask — do NOT skip and continue.
 
@@ -115,7 +115,7 @@ const gallery = entries; // everything, sold or not
 ## Calibrated Debate, Not Capitulation
 
 When the user challenges a flag:
-1. Re-apply the 1024-gate (downscale + view actual pixels)
+1. Re-apply the 2048-gate (downscale + view actual pixels)
 2. State the strongest counter-argument honestly
 3. Test against FOP / trademark / copyright frameworks
 4. Concede when dispositive; name residual risk when not
@@ -139,7 +139,7 @@ See sibling skill for the persons-in-frame side. When a photo trips both:
 
 1. **Scope** — read the catalog, separate exempt category(ies) from non-exempt
 2. **Triage by description / IPTC** — flag obvious candidates (named venues, named installations, branded livery)
-3. **Visual verification (1024-gate MANDATORY)** — downscale every candidate, view, classify
+3. **Visual verification (2048-gate MANDATORY)** — downscale every candidate, view, classify
 4. **Spot-check** — pick ≥2 "OK by description" entries, downscale + view, confirm
 5. **Structured report** — bucket-by-bucket; one-line reason for every flag
 6. **Surface decisions** — present buckets; let the catalog owner assign final disposition

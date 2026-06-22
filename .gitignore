@@ -1,1 +1,12 @@
 Plans
+.DS_Store
+${HOME}/.claude/PAI/MEMORY/LEARNING/ALGORITHM/2026-06/2026-06-21-172210_LEARNING_sentiment-rating-4.md
+${HOME}/.claude/PAI/MEMORY/LEARNING/SIGNALS/ratings.jsonl
+.gitignore
+${HOME}/.claude/PAI/MEMORY/LEARNING/ALGORITHM/2026-06/2026-06-21-171719_LEARNING_sentiment-rating-4.md
+${HOME}/.claude/PAI/MEMORY/LEARNING/ALGORITHM/2026-06/2026-06-21-171508_LEARNING_sentiment-rating-4.md
+${HOME}/.claude/PAI/MEMORY/LEARNING/FAILURES/2026-06/2026-06-21-173555_user-repeating-correction-assistant-missed/sentiment.json
+${HOME}/.claude/PAI/MEMORY/LEARNING/FAILURES/2026-06/2026-06-21-173555_user-repeating-correction-assistant-missed/tool-calls.json
+${HOME}/.claude/PAI/MEMORY/LEARNING/FAILURES/2026-06/2026-06-21-173555_user-repeating-correction-assistant-missed/transcript.jsonl
+${HOME}/.claude/PAI/MEMORY/LEARNING/ALGORITHM/2026-06/2026-06-21-173545_LEARNING_sentiment-rating-3.md
+${HOME}/.claude/PAI/MEMORY/LEARNING/FAILURES/2026-06/2026-06-21-173555_user-repeating-correction-assistant-missed/CONTEXT.md
