@@ -273,3 +273,27 @@ Confirm the title, description word count, and keyword list all look correct. Cl
 | "Blue hour"/"golden hour" on a midday photo, or "autumn" on a July photo | Time-of-day and season are claims about capture date/time — read `DateTimeOriginal` (Step 2.5), map season via GPS hemisphere; describe light/conditions, not the hour or season |
 | Calling a photo a "King's Day celebration" because the date matches | Holiday/event proximity (Step 2.6) is context, not depiction — fold in only if the image shows it; otherwise omit or state as timing |
 | Distant subject labeled with the camera's GPS location | Coordinates are the vantage point, not where the subject is — a far mountain/skyline isn't "at" your address; phrase as "seen from …" or omit |
+
+## Auditing an Existing Catalog (not just fresh intake)
+
+This skill also covers auditing the metadata of **already-published** products, not only tagging new photos. The same rules apply, but the failure modes are different — the metadata was often generated long ago (sometimes by an LLM or by Lightroom/auto-tagging), so it carries *confident-but-wrong* claims rather than missing data.
+
+**Run the deterministic pass first, then human-verify what the script can't.** A script can ground every time/season claim in `DateTimeOriginal` and catch keyword hygiene catalog-wide in seconds; reserve attention (and the user's eyes) for the proper-noun and subject-identity calls that need an image. The alinzperspective project keeps a reusable example at `scripts/audit-catalog-metadata.ts` (read-only; batch-reads EXIF, flags HARD/SOFT/INFO, and lists every entry that *asserts* a named landmark so a human can verify it).
+
+**Build a labeled contact sheet for landmark/subject review.** When many entries assert specific named places, downscale each, annotate with the *claimed* name + the *GPS-reverse-geocoded* place as a cross-check, and `montage` them into one sheet for the user to scan. The GPS cross-check alone surfaces most mismatches (claimed Keizersgracht, GPS says Amstel).
+
+### Lessons learned (hard-won)
+
+| Lesson | What it means in practice |
+|---|---|
+| **Catalog text can contain fabricated proper nouns** | A description naming "the Aluminiumbrug on the Nieuw Keizersgracht" may be invented — the *embedded* EXIF caption was generic ("a classic Dutch drawbridge"). Never trust a specific bridge/tower/canal/church name you can't confirm against GPS + the image. Verify or strip it; don't substitute another guess. |
+| **Camera GPS is the vantage, not the subject — even in the city** | The GPS may resolve to the bridge you're *standing on* (Hendrick Jacobsz Staetsbrug) while the subject is a different bridge down the river (Walter Suskindbrug). Reverse-geocode to locate yourself, then identify the subject from the frame. |
+| **Adjacent landmarks get swapped** | "Mahlertoren" (Zuidas) for the Mondriaantoren (Omval) — towers/bridges near each other are easily confused. GPS + a known cluster (e.g. Rembrandt Tower marks Omval) disambiguates; the same GPS also gave the real foreground location (Park Somerlust). |
+| **Sunrise reads as sunset** | A warm "sunset" frame shot at 06:03 in August is *sunrise*. Trust the `DateTimeOriginal` clock over the colour of the light — warm/violet sky happens at both ends of the day. |
+| **Use the house season convention consistently** | This project uses **meteorological** seasons (DJF/MAM/JJA/SON, month-based) — September is autumn, full stop, no astronomical-boundary softening. Confirm which convention the project wants and apply it uniformly. |
+| **Machine-vision junk accumulates in keywords** | Auto-tagging leaves `Any Vision`, `Labels`, `no person`, `outdoors`, case-variant duplicates (`Reflection`/`reflection`), and contradictory time tags (`dawn`+`dusk`+`night` on one photo). Scrub catalog-wide: drop junk, collapse case dupes, and drop time tags that contradict the verified capture hour. |
+| **Figurative / behavioral words are false positives** | "roosts communally **at night**" (behaviour), "cooling toward **night**" (figurative), "symbol of **summer** meadows" (cultural association), "leafless **winter** trees" (a condition) — none are capture-time claims. Don't auto-"fix" them; describe conditions literally instead of forcing a season label. |
+| **Stub descriptions & proper-noun misspellings** | Watch for 6-word stub descriptions (vs the 60–90 target) and typos in names (`Rembrantplein`→Rembrandtplein). The title/Dutch/keyword fields sometimes hold the correct spelling while the description doesn't — cross-check the fields against each other. |
+| **A filename can disagree with the catalog** | A source named `…-Sunrise-De-Krijtberg-…` under a catalog id `…-sunset-…` is a flag: the time-of-day and/or a named landmark may be wrong. The filename is another evidence source, not gospel — reconcile it against EXIF + image. |
+| **Edit catalog JSON without reformatting** | If the file is `JSON.stringify(obj, null, 2)`-shaped, mutate by id and write back with the same call (+ trailing newline) so the diff shows only changed entries. Verify round-trip is byte-identical first. Never change a published entry's `id` (it keys URLs + sales-platform products) — fix only the human-facing fields. |
+| **Re-embed fixes into the source JPEG** | Catalog JSON is the live source of truth, but a future re-extract reads the archived original — embed corrected title/caption/keywords (and GPS, if you've learned it) back into the source so the fix is durable. |

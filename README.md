@@ -37,7 +37,7 @@ flowchart TD
     SO -- Yes --> LIVE[Stripe product + sized prices<br/>file moves · archive · queue removal]:::live
     LIVE --> RPT([Final report:<br/>verdicts · dispositions · what shipped]):::report
 
-    GATE[[1024-gate · every image read<br/>load-bearing safety rule]]:::rule
+    GATE[[2048-gate · every image read<br/>load-bearing safety rule]]:::rule
     GATE -.-> S1
     GATE -.-> S2
     GATE -.-> S3
@@ -54,13 +54,13 @@ flowchart TD
     classDef rule fill:#fef,stroke:#636,stroke-width:1px,stroke-dasharray: 4 2;
 ```
 
-The two red-bordered nodes — the 1024-gate and the per-photo sign-off — are load-bearing safety rules. Everything else can be tuned; those two stay.
+The two red-bordered nodes — the 2048-gate and the per-photo sign-off — are load-bearing safety rules. Everything else can be tuned; those two stay.
 
 ## Two rules that show up in every skill
 
-**1. The 1024-gate.** Before reading or classifying any image, downscale to 1024px on the long edge and view the downscaled copy. If the resize fails, HALT and ask — never fall back to the full-resolution original. This block is duplicated in every skill on purpose: it once prevented a session from burning ~137M tokens reading full-res photos, and inlining it is the only way to be sure it survives partial loads, refactors, and skill-level edits. Treat it as load-bearing safety code, not boilerplate.
+**1. The 2048-gate.** Before reading or classifying any image, downscale to 2048px on the long edge and view the downscaled copy. If the resize fails, HALT and ask — never fall back to the full-resolution original. This block is duplicated in every skill on purpose: it once prevented a session from burning ~137M tokens reading full-res photos, and inlining it is the only way to be sure it survives partial loads, refactors, and skill-level edits. Treat it as load-bearing safety code, not boilerplate.
 
-**2. Calibrated debate, not capitulation.** When the user challenges a flag, re-apply the 1024-gate, state the strongest counter-argument honestly, test it against the relevant standard (identifiability, FOP, trademark), and concede only when the argument is dispositive. The skills are written to push back on bad flags, not to fold under pressure.
+**2. Calibrated debate, not capitulation.** When the user challenges a flag, re-apply the 2048-gate, state the strongest counter-argument honestly, test it against the relevant standard (identifiability, FOP, trademark), and concede only when the argument is dispositive. The skills are written to push back on bad flags, not to fold under pressure.
 
 ## Installation
 
@@ -113,7 +113,7 @@ To work on the skills without going through marketplace install, symlink the ent
 ## External dependencies
 
 - `exiftool` — IPTC/XMP metadata read & write (`brew install exiftool`)
-- `ImageMagick` (`magick`) or `sharp` — the 1024 downscale (`brew install imagemagick` for the bash path)
+- `ImageMagick` (`magick`) or `sharp` — the 2048 downscale (`brew install imagemagick` for the bash path)
 - `curl` — Nominatim reverse-geocoding in `photo-metadata-helper`
 
 The skills assume bash + macOS / Linux. Sales-platform integration (Stripe in the canonical example) is referenced abstractly — adapt the `property-release-review` remediation pipeline to whatever catalog source-of-truth and sales platform you actually run.

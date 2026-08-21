@@ -22,7 +22,7 @@ Either way, confirm the scope (count + source) with the user before starting ste
 
 For every photo in the input directory, walk through the five steps below in order. The skills are namespaced under `photography-workflow:` — invoke each one's workflow as documented in its `SKILL.md`. If you're unsure of any skill's exact rules, re-read its `SKILL.md` before acting.
 
-1. **`photography-workflow:photo-metadata-helper`** — generate IPTC title / description / keywords / `PersonInImage` and rename each file. Confirm the 1024-gate ran before any image read.
+1. **`photography-workflow:photo-metadata-helper`** — generate IPTC title / description / keywords / `PersonInImage` and rename each file. Confirm the 2048-gate ran before any image read.
 2. **`photography-workflow:quality-review`** — assess technical / editorial / print-readiness. Stop the run for any photo that comes back **FAIL**; surface reasons; wait for user instruction. **PASS** and **CONDITIONAL PASS** continue.
 3. **`photography-workflow:property-release-review`** — audit depicted objects (buildings, sculpture, mural, branded venue, trademark). **Bucket 1** photos drop out of the pipeline entirely. **Bucket 2** photos carry forward marked portfolio-only (no sale at step 5). **OK / EXEMPT** continue normally.
 4. **`photography-workflow:model-release-review`** — audit depicted persons. **HARD-FLAG** without an on-file release drops out (or stalls until the release is produced). **OK / EXEMPT** continue.
@@ -30,8 +30,8 @@ For every photo in the input directory, walk through the five steps below in ord
 
 ## Rules that apply to every step
 
-- **1024-gate.** Before reading or classifying any image, downscale to 1024px on the long edge and view only the downscaled copy. If resize fails, HALT and ask. This rule is duplicated in every skill on purpose — treat it as load-bearing safety code, not boilerplate.
-- **Calibrated debate, not capitulation.** When the user pushes back on a flag, re-apply the 1024-gate, state the strongest counter-argument honestly, test it against the relevant standard, and concede only when dispositive.
+- **2048-gate.** Before reading or classifying any image, downscale to 2048px on the long edge and view only the downscaled copy. If resize fails, HALT and ask. This rule is duplicated in every skill on purpose — treat it as load-bearing safety code, not boilerplate.
+- **Calibrated debate, not capitulation.** When the user pushes back on a flag, re-apply the 2048-gate, state the strongest counter-argument honestly, test it against the relevant standard, and concede only when dispositive.
 - **Short-circuit on upstream failure.** A FAIL at step 2, Bucket 1 at step 3, or unresolved HARD-FLAG at step 4 means that photo does NOT proceed to subsequent steps. Surface the stop and wait for instruction.
 - **Sign-off is non-negotiable.** Step 5's per-photo sign-off rule is the one place in the pipeline where calibrated debate does NOT apply. Refuse batch approvals politely; restate the rule; offer to streamline presentation only.
 
