@@ -44,15 +44,14 @@ flowchart TD
     GATE -.-> S4
     GATE -.-> S5
 
-    classDef source fill:#eef,stroke:#446,stroke-width:1px;
-    classDef step fill:#efe,stroke:#363,stroke-width:1px;
-    classDef gate fill:#fee,stroke:#933,stroke-width:2px;
-    classDef halt fill:#fdd,stroke:#933,stroke-width:1px;
-    classDef mark fill:#ffe,stroke:#663,stroke-width:1px;
-    classDef live fill:#dfd,stroke:#363,stroke-width:2px;
-    classDef report fill:#eef,stroke:#446,stroke-width:1px;
-    classDef rule fill:#fef,stroke:#636,stroke-width:1px,stroke-dasharray: 4 2;
-```
+    classDef source fill:#1e293b,stroke:#64748b,color:#f1f5f9,stroke-width:1px;
+    classDef step fill:#16352a,stroke:#4ade80,color:#ecfdf5,stroke-width:1px;
+    classDef gate fill:#3b1f2b,stroke:#fb7185,color:#fff1f2,stroke-width:2px;
+    classDef halt fill:#3f2020,stroke:#f87171,color:#fef2f2,stroke-width:1px;
+    classDef mark fill:#3d3215,stroke:#facc15,color:#fefce8,stroke-width:1px;
+    classDef live fill:#12382b,stroke:#34d399,color:#ecfdf5,stroke-width:2px;
+    classDef report fill:#1e293b,stroke:#64748b,color:#f1f5f9,stroke-width:1px;
+    classDef rule fill:#2e1f46,stroke:#c084fc,color:#faf5ff,stroke-width:1px,stroke-dasharray: 4 2;
 
 The two red-bordered nodes — the 2048-gate and the per-photo sign-off — are load-bearing safety rules. Everything else can be tuned; those two stay.
 
