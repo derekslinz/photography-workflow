@@ -1,20 +1,21 @@
 ---
 name: reviewed-photo-publish
-description: "Step 5 of 5 in the photo intake pipeline. Takes a photo that has cleared metadata, quality, property, and model review and pushes it live — writes the catalog entry, creates the sales-platform product and child prices (one per supported print size), regenerates derived lists (for-sale, gallery, sitemap), moves the file from intake to the published location, and archives the original. Mandatory dry-run before any live sales-platform mutation. Mandatory 2048px-long-edge downscale for any pre-flight visual verification. USE WHEN: publish photo, list this print, push to sales, add to catalog, go live, finalize listing, complete the intake pipeline. NOT FOR: metadata tagging (use photo-metadata-helper), quality gating (use quality-review), rights audits (use property-release-review / model-release-review), or unpublishing a live entry (that's the remediation pipeline in property-release-review)."
+description: "Step 6 of 6 in the photo intake pipeline. Takes a photo that has cleared metadata, quality, property, model, and localization audit review and pushes it live — writes the catalog entry, creates the sales-platform product and child prices (one per supported print size), regenerates derived lists (for-sale, gallery, sitemap), moves the file from intake to the published location, and archives the original. Mandatory dry-run before any live sales-platform mutation. Mandatory 2048px-long-edge downscale for any pre-flight visual verification. USE WHEN: publish photo, list this print, push to sales, add to catalog, go live, finalize listing, complete the intake pipeline. NOT FOR: metadata tagging (use photo-metadata-helper), quality gating (use quality-review), rights audits (use property-release-review / model-release-review), localization audit (use localization-audit-review), or unpublishing a live entry (that's the remediation pipeline in property-release-review)."
 effort: medium
 ---
 
 # Publish
 
-Step 5 of 5 in the photo intake pipeline. Turns a cleared photo into a live, sellable catalog entry — atomically across catalog source-of-truth, sales platform, derived lists, and file system. Refuses to publish anything that hasn't been stamped by every upstream step.
+Step 6 of 6 in the photo intake pipeline. Turns a cleared photo into a live, sellable catalog entry — atomically across catalog source-of-truth, sales platform, derived lists, and file system. Refuses to publish anything that hasn't been stamped by every upstream step.
 
-## Intake Sequence (Step 5 of 5)
+## Intake Sequence (Step 6 of 6)
 
 1. **photo-metadata-helper** — metadata, naming, subject-name embed
 2. **quality-review** — technical, editorial, and print-readiness gate
 3. **property-release-review** — depicted-object audit
 4. **model-release-review** — depicted-person audit
-5. **publish** (this skill) — catalog entry, sales-platform listing, intake-queue cleanup
+5. **localization-audit-review** — Dutch customer-facing content QA
+6. **publish** (this skill) — catalog entry, sales-platform listing, intake-queue cleanup
 
 Publish is the only step in the pipeline that mutates external state (sales platform, live site, archive). It is deliberately segmented so that an upstream FAIL never silently triggers a publish, and a failed publish never silently corrupts an upstream verdict.
 
@@ -56,6 +57,7 @@ A photo is publishable only if every upstream verdict on file is one of:
 | quality-review | PASS, or CONDITIONAL PASS with a noted size restriction |
 | property-release-review | OK, EXEMPT, or Bucket 2 (portfolio-only — publish to gallery but NOT to sale) |
 | model-release-review | OK, EXEMPT, or HARD-FLAG with release confirmed on file |
+| localization-audit-review | PASS, or CONDITIONAL PASS with noted terminology/stylistic reservations |
 
 **Anything else is a refuse-to-publish.** Bucket 1 (remove entirely) and FAIL never reach this step in a clean run, but the skill double-checks anyway because intake state can drift.
 

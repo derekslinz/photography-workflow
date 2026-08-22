@@ -1,7 +1,7 @@
 {
   "name": "photography-workflow",
-  "description": "Five-step intake pipeline for commercial-photography catalogs: metadata enrichment, quality gate, property/trademark/copyright audit, model-release audit, and explicit-sign-off publish to a sales platform. Mandatory 2048-px-downscale gate on every image read. Mandatory per-photo sign-off before any live mutation.",
-  "version": "1.0.1",
+  "description": "Six-step intake pipeline for commercial-photography catalogs: metadata enrichment, quality gate, property/trademark/copyright audit, model-release audit, Dutch localization audit, and explicit-sign-off publish to a sales platform. Mandatory 2048-px-downscale gate on every image read. Mandatory per-photo sign-off before any live mutation.",
+  "version": "1.0.2",
   "author": {
     "name": "Derek Linz"
   },

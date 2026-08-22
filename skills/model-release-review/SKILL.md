@@ -24,15 +24,16 @@ Output location: a scratch dir scoped to the active audit (e.g. `<workdir>/downs
 
 This rule exists because description-only judgments (carry-over notes from prior sessions, captions, IPTC metadata) lie. Pixels don't. The gate has demonstrably caught description-only HARD-FLAGs that the actual frame falsified — back-turned subjects mislabeled as frontal, glass-distorted faces mislabeled as identifiable.
 
-## Intake Sequence (Step 4 of 5)
+## Intake Sequence (Step 4 of 6)
 
-For new-photo intake, this skill is **step 4 of 5** in the pipeline:
+For new-photo intake, this skill is **step 4 of 6** in the pipeline:
 
 1. **photo-metadata-helper** — metadata, naming, subject-name embed
 2. **quality-review** — technical, editorial, and print-readiness gate
 3. **property-release-review** — depicted-object audit
 4. **model-release-review** (this skill) — depicted-person audit
-5. **reviewed-photo-publish** — catalog entry, sales-platform listing, remove from intake queue
+5. **localization-audit-review** — Dutch customer-facing content QA
+6. **reviewed-photo-publish** — catalog entry, sales-platform listing, remove from intake queue
 
 If quality-review failed a photo or property-release-review flagged it as Bucket 1 (remove entirely), skip model review for that photo — the upstream concern is already dispositive. Publish is a distinct downstream step, never collapsed into this skill.
 

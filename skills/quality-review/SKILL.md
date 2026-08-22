@@ -1,7 +1,7 @@
 ---
 name: quality-review
 description: >
-  Step 2 of 5 in the photo intake pipeline. Assesses each candidate photo against technical,
+  Step 2 of 6 in the photo intake pipeline. Assesses each candidate photo against technical,
   editorial, and print-readiness criteria before the image moves to legal review. Produces a
   PASS / CONDITIONAL PASS / FAIL verdict per image. On FAIL, surfaces specific reasons and
   waits for user instruction — takes no destructive action. Mandatory 2048px downscale before
@@ -16,18 +16,19 @@ effort: medium
 
 # Quality Review
 
-Step 2 of 5 in the photo intake pipeline. Reviews each photo for technical quality, editorial
+Step 2 of 6 in the photo intake pipeline. Reviews each photo for technical quality, editorial
 merit, and print-readiness before committing time to legal review and publishing.
 
-## Intake Sequence (Step 2 of 5)
+## Intake Sequence (Step 2 of 6)
 
 1. **Photo-Metadata-Helper** — metadata, naming, subject-name embed
 2. **quality-review** (this skill) — technical, editorial, print-readiness gate
 3. **property-release-review** — depicted-object audit
 4. **model-release-review** — depicted-person audit
-5. **reviewed-photo-publish** — catalog entry, Stripe listing, remove from queue
+5. **localization-audit-review** — Dutch customer-facing content QA
+6. **reviewed-photo-publish** — catalog entry, Stripe listing, remove from queue
 
-**If a photo fails quality review, do not proceed to steps 3–5 for that photo.** Surface
+**If a photo fails quality review, do not proceed to steps 3–6 for that photo.** Surface
 the failure and wait for user instruction.
 
 ## 🚨 MANDATORY FIRST ACTIONS: the visual gate AND the measurement pass
