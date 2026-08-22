@@ -52,7 +52,7 @@ flowchart TD
     classDef live fill:#12382b,stroke:#34d399,color:#ecfdf5,stroke-width:2px;
     classDef report fill:#1e293b,stroke:#64748b,color:#f1f5f9,stroke-width:1px;
     classDef rule fill:#2e1f46,stroke:#c084fc,color:#faf5ff,stroke-width:1px,stroke-dasharray: 4 2;
-
+```
 The two red-bordered nodes — the 2048-gate and the per-photo sign-off — are load-bearing safety rules. Everything else can be tuned; those two stay.
 
 ## Two rules that show up in every skill
